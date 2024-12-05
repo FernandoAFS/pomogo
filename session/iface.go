@@ -6,7 +6,7 @@ type PomoSessionIface interface {
 	Status() PomoSessionStatus
 	GetNextStatus() PomoSessionStatus
 	SetNextStatus(status PomoSessionStatus)
-	Reset() 
+	Reset()
 	CompletedWorkSessions() uint
 }
 

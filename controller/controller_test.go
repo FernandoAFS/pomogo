@@ -195,15 +195,15 @@ func TestControllerNextStatePause(t *testing.T) {
 			t.Fatalf("Controller is pause status at iteration %d", i)
 		}
 
-		if err := controller.Pause(refNow); err != nil{
+		if err := controller.Pause(refNow); err != nil {
 			t.Fatal(err)
 		}
-		
+
 		if st := controller.Status().State; st != PomoControllerPause {
 			t.Fatalf("Controller is not pause status at iteration %d", i)
 		}
 
-		if err := controller.Play(refNow); err != nil{
+		if err := controller.Play(refNow); err != nil {
 			t.Fatal(err)
 		}
 

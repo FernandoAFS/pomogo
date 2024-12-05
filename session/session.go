@@ -1,9 +1,9 @@
 package session
 
 type PomoSession struct {
-	status         PomoSessionStatus
+	status            PomoSessionStatus
 	WorkSessionsBreak uint // CONFIG VARIABLE...
-	workedSessions uint
+	workedSessions    uint
 }
 
 func (s *PomoSession) Status() PomoSessionStatus {
@@ -14,7 +14,6 @@ func (s *PomoSession) CompletedWorkSessions() uint {
 	return s.workedSessions
 }
 
-
 func (s *PomoSession) GetNextStatus() PomoSessionStatus {
 	// EITHER LONG OR SHORT BREAK
 	if s.status != PomoSessionWork {
@@ -22,7 +21,7 @@ func (s *PomoSession) GetNextStatus() PomoSessionStatus {
 	}
 
 	nWorkedSessions := s.workedSessions
-	if s.status == PomoSessionWork{
+	if s.status == PomoSessionWork {
 		nWorkedSessions = nWorkedSessions + 1
 	}
 
@@ -32,7 +31,6 @@ func (s *PomoSession) GetNextStatus() PomoSessionStatus {
 
 	return PomoSessionShortBreak
 }
-
 
 func (s *PomoSession) SetNextStatus(status PomoSessionStatus) {
 	if s.status != PomoSessionWork && status == PomoSessionWork {
