@@ -7,6 +7,10 @@ import (
 	"time"
 )
 
+// =================================
+// DEFAULT CONTROLLER IMPLEMENTATION
+// =================================
+
 type PomoController struct {
 	session         pomoSession.PomoSessionIface
 	timer           pomoTimer.PomoTimerIface
@@ -21,12 +25,12 @@ type PomoController struct {
 	errorSink func(err error)
 
 	// RUN ON PLAY OR RESUME
-	playEventSink  func(status PomoControllerEventArgsPlay)
-	stopEventSink  func(status PomoControllerEventArgsStop)
-	pauseEventSink func(status PomoControllerEventArgsPause)
+	playEventSink  func(event PomoControllerEventArgsPlay)
+	stopEventSink  func(event PomoControllerEventArgsStop)
+	pauseEventSink func(event PomoControllerEventArgsPause)
 
 	// RUN ON END OF STATE TIME OR ON SKIP STATES
-	nextStateEventSink func(status PomoControllerEventArgsNextState)
+	nextStateEventSink func(event PomoControllerEventArgsNextState)
 
 	pauseAt    *time.Time
 	endOfState *time.Time
@@ -188,13 +192,13 @@ func (c *PomoController) Play(now time.Time) error {
 	defer c.locker.Unlock()
 
 	if c.endOfState == nil {
-
 		c.session.Reset()
 		if err := c.runTimer(now); err != nil {
 			c.errorEvent(err)
 			return err
 		}
 		c.playEvent(now)
+		return nil
 	}
 
 	if c.pauseAt != nil {
