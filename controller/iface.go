@@ -4,10 +4,10 @@ import "time"
 
 type PomoControllerIface interface {
 	Status() PomoControllerStatus
-	Pause(now time.Time) bool
-	Play(now time.Time) bool
-	Skip(now time.Time) bool
-	Stop(now time.Time) bool
+	Pause(now time.Time) error
+	Play(now time.Time) error
+	Skip(now time.Time) error
+	Stop(now time.Time) error
 }
 
 // ==========
