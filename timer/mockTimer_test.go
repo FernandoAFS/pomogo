@@ -23,10 +23,7 @@ func TestMockTimerSync(t *testing.T) {
 	var wg sync.WaitGroup
 	wg.Add(1)
 
-	cb := func(then time.Time) {
-		if then != refTime.Add(d) {
-			t.Fatalf("Then is not expected value")
-		}
+	cb := func() {
 		wg.Done()
 	}
 	mockTimer.WaitCb(d, cb)

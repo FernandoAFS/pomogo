@@ -1,7 +1,5 @@
 package timer
 
-// Timer wrapper. Object meant for easier testing.
-
 import (
 	"sync"
 	"time"
@@ -40,17 +38,17 @@ func (t *PomoTimer) teardown() bool {
 	return true
 }
 
-func (t *PomoTimer) cbWaitRoutine(d time.Duration, cb func(then time.Time)) {
+func (t *PomoTimer) cbWaitRoutine(d time.Duration, cb func()) {
 	select {
-	case then := <-time.After(d):
+	case <-time.After(d):
 		t.teardown()
-		cb(then) // ASYNC EXECUTION OF THE CALLBACK AND INMEDIATE TEARDOWN.
+		cb() // ASYNC EXECUTION OF THE CALLBACK AND INMEDIATE TEARDOWN.
 	case <-t.cancelChan:
 		t.teardown()
 	}
 }
 
-func (t *PomoTimer) WaitCb(d time.Duration, cb func(then time.Time)) error {
+func (t *PomoTimer) WaitCb(d time.Duration, cb func()) error {
 	// CANNOT WAIT TWICE.
 	if err := t.setup(); err != nil {
 		return err

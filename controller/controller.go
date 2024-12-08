@@ -212,8 +212,9 @@ func (c *PomoController) Play(now time.Time) error {
 func (c *PomoController) resume(now time.Time) error {
 
 	stateTimeLeft := c.endOfState.Sub(*c.pauseAt)
+	then := now.Add(stateTimeLeft)
 
-	cb := func(then time.Time) {
+	cb := func() {
 		nextStatus := c.session.GetNextStatus()
 		c.session.SetNextStatus(nextStatus)
 		c.runTimer(then)
@@ -259,8 +260,9 @@ func (c *PomoController) nextTimer(now time.Time) error {
 func (c *PomoController) runTimer(now time.Time) error {
 	status := c.session.Status()
 	statusDuration := c.durationFactory(status)
+	then := now.Add(statusDuration)
 
-	cb := func(then time.Time) { c.nextTimer(then) }
+	cb := func() { c.nextTimer(then) }
 	if err := c.timer.WaitCb(statusDuration, cb); err != nil {
 		c.errorEvent(err)
 		return err

@@ -52,17 +52,17 @@ func (t *MockTimer) teardown() error {
 	return nil
 }
 
-func (t *MockTimer) cbWaitRoutine(then time.Time, cb func(then time.Time)) {
+func (t *MockTimer) cbWaitRoutine(then time.Time, cb func()) {
 	done := <-t.doneChan
 	// FIRST THING. CHANEL IS NO LONGER WAITED
 	t.teardown()
 	if !done {
 		return
 	}
-	cb(then)
+	cb()
 }
 
-func (t *MockTimer) WaitCb(d time.Duration, cb func(then time.Time)) error {
+func (t *MockTimer) WaitCb(d time.Duration, cb func()) error {
 	if err := t.setup(); err != nil {
 		return err
 	}

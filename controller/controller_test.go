@@ -462,11 +462,11 @@ func TestControllerNextStateEvent(t *testing.T) {
 	nextStateEventSink := func(event PomoControllerEventArgsNextState) {
 		// INCLUDE STATE CHECKING... DOUBLE CHECK WHAT IS RIGHT...
 
-		if event.At != refNow {
+		if event.At != eventTime {
 			err := fmt.Sprintf(
 				"Next state event time (%s), is not expected (%s)",
 				event.At,
-				refNow,
+				eventTime,
 			)
 			nextStateEvCh <- &err
 		}
