@@ -1,12 +1,19 @@
 package controller
 
 import (
-	"fmt"
 	pomoSession "pomogo/session"
 	pomoTimer "pomogo/timer"
 	"testing"
 	"time"
 )
+
+var zeroDurationCfg = pomoSession.SessionStateDurationConfig{
+	PomoSessionWork:       time.Duration(0),
+	PomoSessionShortBreak: time.Duration(0),
+	PomoSessionLongBreak:  time.Duration(0),
+}
+
+var zeroDurationFactory = zeroDurationCfg.GetDurationFactory()
 
 // ========
 // FIXTURES
@@ -22,29 +29,14 @@ func sessionFactory() *pomoSession.PomoSession {
 func mockControllerFactory(
 	timer pomoTimer.PomoTimerIface,
 	session pomoSession.PomoSessionIface,
-	playEventSink func(status PomoControllerEventArgsPlay),
-	stopEventSink func(status PomoControllerEventArgsStop),
-	pauseEventSink func(status PomoControllerEventArgsPause),
-	nextStateEventSink func(event PomoControllerEventArgsNextState),
+	options ...PomoControllerOption,
 ) *PomoController {
-
-	sessDurationCfg := pomoSession.SessionStateDurationConfig{
-		PomoSessionWork:       time.Duration(0),
-		PomoSessionShortBreak: time.Duration(0),
-		PomoSessionLongBreak:  time.Duration(0),
+	cf := PomoControllerFactory{
+		session:         session,
+		timer:           timer,
+		durationFactory: zeroDurationFactory,
 	}
-
-	durFactory := sessDurationCfg.GetDurationFactory()
-
-	return &PomoController{
-		session:            session,
-		timer:              timer,
-		durationFactory:    durFactory,
-		playEventSink:      playEventSink,
-		stopEventSink:      stopEventSink,
-		pauseEventSink:     pauseEventSink,
-		nextStateEventSink: nextStateEventSink,
-	}
+	return cf.Create(options...)
 }
 
 // ============
@@ -54,9 +46,15 @@ func mockControllerFactory(
 func TestControllerRunStop(t *testing.T) {
 
 	refNow := time.Date(2024, 12, 04, 0, 0, 0, 0, time.UTC)
-	timer := pomoTimer.MockTimerFactory(refNow)
+	timer := &pomoTimer.MockCbTimer{}
 	session := sessionFactory()
-	controller := mockControllerFactory(timer, session, nil, nil, nil, nil)
+
+	cf := PomoControllerFactory{
+		session:         session,
+		timer:           timer,
+		durationFactory: zeroDurationCfg.GetDurationFactory(),
+	}
+	controller := cf.Create()
 
 	if st := controller.Status().State; st != PomoControllerStopped {
 		t.Fatalf("Controller state is %s instead of working", st)
@@ -83,9 +81,9 @@ func TestControllerRunStop(t *testing.T) {
 func TestControllerRunPause(t *testing.T) {
 
 	refNow := time.Date(2024, 12, 04, 0, 0, 0, 0, time.UTC)
-	timer := pomoTimer.MockTimerFactory(refNow)
+	timer := &pomoTimer.MockCbTimer{}
 	session := sessionFactory()
-	controller := mockControllerFactory(timer, session, nil, nil, nil, nil)
+	controller := mockControllerFactory(timer, session)
 
 	if st := controller.Status().State; st != PomoControllerStopped {
 		t.Fatalf("Controller state is %s instead of working", st)
@@ -116,9 +114,9 @@ func TestControllerRunPause(t *testing.T) {
 func TestControllerNextState(t *testing.T) {
 
 	refNow := time.Date(2024, 12, 04, 0, 0, 0, 0, time.UTC)
-	timer := pomoTimer.MockTimerFactory(refNow)
+	timer := &pomoTimer.MockCbTimer{}
 	session := sessionFactory()
-	controller := mockControllerFactory(timer, session, nil, nil, nil, nil)
+	controller := mockControllerFactory(timer, session)
 
 	if st := controller.Status().State; st != PomoControllerStopped {
 		t.Fatalf("Controller state is %s instead of working", st)
@@ -169,9 +167,9 @@ func TestControllerNextState(t *testing.T) {
 func TestControllerNextStatePause(t *testing.T) {
 
 	refNow := time.Date(2024, 12, 04, 0, 0, 0, 0, time.UTC)
-	timer := pomoTimer.MockTimerFactory(refNow)
+	timer := &pomoTimer.MockCbTimer{}
 	session := sessionFactory()
-	controller := mockControllerFactory(timer, session, nil, nil, nil, nil)
+	controller := mockControllerFactory(timer, session)
 
 	if st := controller.Status().State; st != PomoControllerStopped {
 		t.Fatalf("Controller state is %s instead of working", st)
@@ -239,7 +237,6 @@ func TestControllerNextStatePause(t *testing.T) {
 func TestControllerPlayEvent(t *testing.T) {
 
 	eventTime := time.Date(2024, 12, 06, 0, 0, 0, 0, time.UTC)
-	refNow := time.Date(2024, 12, 04, 0, 0, 0, 0, time.UTC)
 
 	eventPlayed := false
 	playSink := func(event PomoControllerEventArgsPlay) {
@@ -260,9 +257,15 @@ func TestControllerPlayEvent(t *testing.T) {
 		eventPlayed = true
 	}
 
-	timer := pomoTimer.MockTimerFactory(refNow)
+	timer := &pomoTimer.MockCbTimer{}
 	session := sessionFactory()
-	controller := mockControllerFactory(timer, session, playSink, nil, nil, nil)
+
+	cf := PomoControllerFactory{
+		session:         session,
+		timer:           timer,
+		durationFactory: zeroDurationCfg.GetDurationFactory(),
+	}
+	controller := cf.Create(PomoControllerOptionPlaySink(playSink))
 
 	if st := controller.Status().State; st != PomoControllerStopped {
 		t.Fatalf("Controller state is %s instead of working", st)
@@ -311,9 +314,14 @@ func TestControllerStopEvent(t *testing.T) {
 		stopEventDone = true
 	}
 
-	timer := pomoTimer.MockTimerFactory(refNow)
+	timer := &pomoTimer.MockCbTimer{}
 	session := sessionFactory()
-	controller := mockControllerFactory(timer, session, nil, stopEventSink, nil, nil)
+
+	controller := mockControllerFactory(
+		timer,
+		session,
+		PomoControllerOptionStopSink(stopEventSink),
+	)
 
 	if st := controller.Status().State; st != PomoControllerStopped {
 		t.Fatalf("Controller state is %s instead of working", st)
@@ -349,7 +357,6 @@ func TestControllerStopEvent(t *testing.T) {
 func TestControllerPauseResumeEvent(t *testing.T) {
 
 	eventTime := time.Date(2024, 12, 06, 0, 0, 0, 0, time.UTC)
-	refNow := time.Date(2024, 12, 04, 0, 0, 0, 0, time.UTC)
 
 	playEventPlayed := false
 	pauseEventDone := false
@@ -390,9 +397,15 @@ func TestControllerPauseResumeEvent(t *testing.T) {
 		pauseEventDone = true
 	}
 
-	timer := pomoTimer.MockTimerFactory(refNow)
+	timer := &pomoTimer.MockCbTimer{}
 	session := sessionFactory()
-	controller := mockControllerFactory(timer, session, playSink, nil, pauseEventSink, nil)
+
+	controller := mockControllerFactory(
+		timer,
+		session,
+		PomoControllerOptionPlaySink(playSink),
+		PomoControllerOptionPauseSink(pauseEventSink),
+	)
 
 	if st := controller.Status().State; st != PomoControllerStopped {
 		t.Fatalf("Controller state is %s instead of working", st)
@@ -429,7 +442,6 @@ func TestControllerPauseResumeEvent(t *testing.T) {
 func TestControllerNextStateEvent(t *testing.T) {
 
 	eventTime := time.Date(2024, 12, 06, 0, 0, 0, 0, time.UTC)
-	refNow := time.Date(2024, 12, 04, 0, 0, 0, 0, time.UTC)
 
 	playEventPlayed := false
 
@@ -451,51 +463,49 @@ func TestControllerNextStateEvent(t *testing.T) {
 		playEventPlayed = true
 	}
 
-	timer := pomoTimer.MockTimerFactory(refNow)
+	timer := &pomoTimer.MockCbTimer{}
 	session := sessionFactory()
 
 	nextStateEventSinkCounter := 0
 	nextStateEventSinkTriggerCounter := 0
 
-	nextStateEvCh := make(chan *string)
-
 	nextStateEventSink := func(event PomoControllerEventArgsNextState) {
 		// INCLUDE STATE CHECKING... DOUBLE CHECK WHAT IS RIGHT...
 
 		if event.At != eventTime {
-			err := fmt.Sprintf(
+			t.Fatalf(
 				"Next state event time (%s), is not expected (%s)",
 				event.At,
 				eventTime,
 			)
-			nextStateEvCh <- &err
 		}
 
 		if st := PomoControllerState(session.Status()); event.CurrentState != st {
-			err := fmt.Sprintf(
+			t.Fatalf(
 				"Next state event state (%s), is not expected (%s)",
 				event.CurrentState,
 				st,
 			)
-			nextStateEvCh <- &err
 		}
 
 		if st := PomoControllerState(session.GetNextStatus()); event.NextState != st {
-			err := fmt.Sprintf(
+			t.Fatalf(
 				"Next state event state (%s), is not expected (%s)",
 				event.CurrentState,
 				st,
 			)
-			nextStateEvCh <- &err
 		}
 
 		nextStateEventSinkCounter++
-		nextStateEvCh <- nil
 	}
 
-	controller := mockControllerFactory(timer, session, playSink, nil, nil, nextStateEventSink)
+	controller := mockControllerFactory(
+		timer,
+		session,
+		PomoControllerOptionPlaySink(playSink),
+		PomoControllerOptionNextStateSink(nextStateEventSink),
+	)
 
-	// PLAY SETUP
 	if st := controller.Status().State; st != PomoControllerStopped {
 		t.Fatalf("Controller state is %s instead of working", st)
 	}
@@ -514,10 +524,6 @@ func TestControllerNextStateEvent(t *testing.T) {
 		timer.ForceDone()
 		nextStateEventSinkTriggerCounter++
 
-		if err := <-nextStateEvCh; err != nil {
-			t.Fatalf("Error on iteration %d: %s", i, *err)
-		}
-
 		if nextStateEventSinkCounter != nextStateEventSinkTriggerCounter {
 			t.Fatalf(
 				"Next state event count is %d while expected %d ",
@@ -526,5 +532,4 @@ func TestControllerNextStateEvent(t *testing.T) {
 			)
 		}
 	}
-	close(nextStateEvCh)
 }

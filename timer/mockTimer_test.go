@@ -18,7 +18,7 @@ func TestMockTimerSync(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	mockTimer := MockTimerFactory(refTime)
+	mockTimer := MockCbTimer{}
 
 	var wg sync.WaitGroup
 	wg.Add(1)
