@@ -7,7 +7,7 @@ type PomoSessionIface interface {
 	GetNextStatus() PomoSessionStatus
 	SetNextStatus(status PomoSessionStatus)
 	Reset()
-	CompletedWorkSessions() uint
+	CompletedWorkSessions() int
 }
 
 type SessionStateDurationFactory func(s PomoSessionStatus) time.Duration

@@ -2,15 +2,15 @@ package session
 
 type PomoSession struct {
 	status            PomoSessionStatus
-	WorkSessionsBreak uint // CONFIG VARIABLE...
-	workedSessions    uint
+	WorkSessionsBreak int // CONFIG VARIABLE...
+	workedSessions    int
 }
 
 func (s *PomoSession) Status() PomoSessionStatus {
 	return s.status
 }
 
-func (s *PomoSession) CompletedWorkSessions() uint {
+func (s *PomoSession) CompletedWorkSessions() int {
 	return s.workedSessions
 }
 

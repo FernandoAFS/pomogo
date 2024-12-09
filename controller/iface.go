@@ -18,7 +18,7 @@ type PomoControllerStatus struct {
 	State          PomoControllerState
 	TimeLeft       *time.Duration
 	PausedAt       *time.Time
-	WorkedSessions uint
+	WorkedSessions int
 }
 
 // ======

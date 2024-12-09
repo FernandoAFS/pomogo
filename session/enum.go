@@ -13,7 +13,7 @@ func (s PomoSessionStatus) String() string {
 	case PomoSessionWork:
 		return "Work"
 	case PomoSessionShortBreak:
-		return "ShortBreak:"
+		return "ShortBreak"
 	case PomoSessionLongBreak:
 		return "LongBreak"
 	}

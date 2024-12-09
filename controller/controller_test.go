@@ -20,7 +20,7 @@ var zeroDurationFactory = zeroDurationCfg.GetDurationFactory()
 // ========
 
 func sessionFactory() *pomoSession.PomoSession {
-	var nWorkSessions uint = 4
+	nWorkSessions := 4
 	return &pomoSession.PomoSession{
 		WorkSessionsBreak: nWorkSessions,
 	}
@@ -42,127 +42,6 @@ func mockControllerFactory(
 // ============
 // ACTION TESTS
 // ============
-
-func TestControllerRunStop(t *testing.T) {
-
-	refNow := time.Date(2024, 12, 04, 0, 0, 0, 0, time.UTC)
-	timer := &pomoTimer.MockCbTimer{}
-	session := sessionFactory()
-
-	cf := PomoControllerFactory{
-		session:         session,
-		timer:           timer,
-		durationFactory: zeroDurationCfg.GetDurationFactory(),
-	}
-	controller := cf.Create()
-
-	if st := controller.Status().State; st != PomoControllerStopped {
-		t.Fatalf("Controller state is %s instead of working", st)
-	}
-
-	if err := controller.Play(refNow); err != nil {
-		t.Fatal(err)
-	}
-
-	if st := controller.Status().State; st != PomoControllerWork {
-		t.Fatalf("Controller state is %s instead of working", st)
-	}
-
-	if err := controller.Stop(refNow); err != nil {
-		t.Fatal(err)
-	}
-
-	if st := controller.Status().State; st != PomoControllerStopped {
-		t.Fatalf("Controller state is %s instead of stop", st)
-	}
-
-}
-
-func TestControllerRunPause(t *testing.T) {
-
-	refNow := time.Date(2024, 12, 04, 0, 0, 0, 0, time.UTC)
-	timer := &pomoTimer.MockCbTimer{}
-	session := sessionFactory()
-	controller := mockControllerFactory(timer, session)
-
-	if st := controller.Status().State; st != PomoControllerStopped {
-		t.Fatalf("Controller state is %s instead of working", st)
-	}
-
-	if err := controller.Play(refNow); err != nil {
-		t.Fatal(err)
-	}
-
-	if st := controller.Status().State; st != PomoControllerWork {
-		t.Fatalf("Controller state is %s instead of working", st)
-	}
-
-	if err := controller.Pause(refNow); err != nil {
-		t.Fatal(err)
-	}
-
-	if st := controller.Status().State; st != PomoControllerPause {
-		t.Fatalf("Controller state is %s instead of pause", st)
-	}
-
-	if err := controller.Play(refNow); err != nil {
-		t.Fatal(err)
-	}
-
-}
-
-func TestControllerNextState(t *testing.T) {
-
-	refNow := time.Date(2024, 12, 04, 0, 0, 0, 0, time.UTC)
-	timer := &pomoTimer.MockCbTimer{}
-	session := sessionFactory()
-	controller := mockControllerFactory(timer, session)
-
-	if st := controller.Status().State; st != PomoControllerStopped {
-		t.Fatalf("Controller state is %s instead of working", st)
-	}
-
-	if err := controller.Play(refNow); err != nil {
-		t.Fatal(err)
-	}
-
-	if st := controller.Status().State; st != PomoControllerWork {
-		t.Fatalf("Controller state is %s instead of working", st)
-	}
-
-	N_ITER := 50
-	for i := 0; i < N_ITER; i++ {
-		if controller.pauseAt != nil {
-			t.Fatalf("Controller is paused at iteration %d", i)
-		}
-
-		if controller.endOfState == nil {
-			t.Fatalf("Controller is stopped at iteration %d", i)
-		}
-
-		if st := controller.Status().State; st == PomoControllerStopped {
-			t.Fatalf("Controller is stopped status at iteration %d", i)
-		}
-
-		if st := controller.Status().State; st == PomoControllerPause {
-			t.Fatalf("Controller is pause status at iteration %d", i)
-		}
-
-		sessionSt := SessionToControllerState(session.Status())
-		controllerSt := controller.Status().State
-
-		if sessionSt != controllerSt {
-			t.Fatalf(
-				"Unexpected state controller: %s, session: %s at iteration %d",
-				sessionSt,
-				controllerSt,
-				i,
-			)
-		}
-
-		timer.ForceDone()
-	}
-}
 
 func TestControllerNextStatePause(t *testing.T) {
 
@@ -229,10 +108,6 @@ func TestControllerNextStatePause(t *testing.T) {
 		timer.ForceDone()
 	}
 }
-
-// ===========
-// EVENT TESTS
-// ===========
 
 func TestControllerPlayEvent(t *testing.T) {
 
@@ -310,7 +185,6 @@ func TestControllerStopEvent(t *testing.T) {
 		}
 
 		// TODO: CHECK TIME LEFT AND TIME SPENT...
-
 		stopEventDone = true
 	}
 
@@ -351,8 +225,6 @@ func TestControllerStopEvent(t *testing.T) {
 	}
 
 }
-
-// TODO: INCLUDE TEST FOR: PAUSE/RESUME AND NEXT EVENTS
 
 func TestControllerPauseResumeEvent(t *testing.T) {
 
@@ -531,5 +403,102 @@ func TestControllerNextStateEvent(t *testing.T) {
 				nextStateEventSinkCounter,
 			)
 		}
+
+		if controller.pauseAt != nil {
+			t.Fatalf("Controller is paused at iteration %d", i)
+		}
+
+		if controller.endOfState == nil {
+			t.Fatalf("Controller is stopped at iteration %d", i)
+		}
+
+		if st := controller.Status().State; st == PomoControllerStopped {
+			t.Fatalf("Controller is stopped status at iteration %d", i)
+		}
+
+		if st := controller.Status().State; st == PomoControllerPause {
+			t.Fatalf("Controller is pause status at iteration %d", i)
+		}
+
+		sessionSt := SessionToControllerState(session.Status())
+		controllerSt := controller.Status().State
+
+		if sessionSt != controllerSt {
+			t.Fatalf(
+				"Unexpected state controller: %s, session: %s at iteration %d",
+				sessionSt,
+				controllerSt,
+				i,
+			)
+		}
+
+	}
+}
+
+func TestControllerSkipEvent(t *testing.T) {
+
+	eventTime := time.Date(2024, 12, 06, 0, 0, 0, 0, time.UTC)
+	N_ITER := 50
+
+	timer := &pomoTimer.MockCbTimer{}
+	session := sessionFactory()
+
+	controller := mockControllerFactory(
+		timer,
+		session,
+	)
+
+	if err := controller.Play(eventTime); err != nil {
+		t.Fatal(err)
+	}
+
+	for i := 0; i < N_ITER; i++ {
+
+		stc := controller.Status().State
+		sst := PomoControllerState(session.Status())
+
+		if stc != sst {
+			t.Fatalf("Iteration %d, Controller %s, Session %s", i, stc, sst)
+		}
+
+		if err := controller.Skip(eventTime); err != nil {
+			t.Fatalf("Iteration %d, error: %s", i, err)
+		}
+	}
+}
+
+func TestControllerErrorEvent(t *testing.T) {
+
+	eventTime := time.Date(2024, 12, 06, 0, 0, 0, 0, time.UTC)
+
+	timer := &pomoTimer.MockCbTimer{}
+	session := sessionFactory()
+
+	errorSinkPlayed := false
+	errorSink := func(err error) {
+		errorSinkPlayed = true
+	}
+
+	controller := mockControllerFactory(
+		timer,
+		session,
+		PomoControllerOptionErrorSink(errorSink),
+	)
+
+	if err := controller.Play(eventTime); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := controller.Pause(eventTime); err != nil {
+		t.Fatal(err)
+	}
+
+	// FORCE ERROR BY TRYING TO PAUSE TWICE.
+	if err := controller.Pause(eventTime); err == nil {
+		t.Fatal("Error not returned when one expected")
+	}
+
+	if !errorSinkPlayed {
+		t.Fatalf("Error sink not played")
 	}
 }
