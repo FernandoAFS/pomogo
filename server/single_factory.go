@@ -97,7 +97,7 @@ func SingleServerRpcUnixRegOpt(
 	return func(ss *SingleSessionServer) (SServerFuncOpt, error) {
 
 		// RAISE ERROR IF THE SOCKET ALREADY EXISTS. PROBABLY BAD EXIT...
-		if _, err := os.Stat(address); !errors.Is(err, os.ErrNotExist){
+		if _, err := os.Stat(address); !errors.Is(err, os.ErrNotExist) {
 			// CONSIDER RETURNING A CUSTOM ERROR...
 			return nil, os.ErrExist
 		}

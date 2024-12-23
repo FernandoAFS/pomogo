@@ -25,11 +25,10 @@ func (cfg *SessionStateDurationConfig) GetDurationFactory() SessionStateDuration
 
 }
 
-
 func DurationFactory(
-	PomoSessionWorkDuration       time.Duration,
+	PomoSessionWorkDuration time.Duration,
 	PomoSessionShortBreakDuration time.Duration,
-	PomoSessionLongBreakDuration  time.Duration,
+	PomoSessionLongBreakDuration time.Duration,
 ) SessionStateDurationFactory {
 	return func(s PomoSessionStatus) time.Duration {
 		switch s {

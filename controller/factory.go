@@ -22,7 +22,7 @@ func ControllerFactory(
 	c := new(PomoController)
 	for _, opt := range options {
 		_, err := opt(c)
-		if err != nil{
+		if err != nil {
 			return nil, err
 		}
 
