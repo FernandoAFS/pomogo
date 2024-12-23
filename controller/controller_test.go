@@ -32,9 +32,9 @@ func mockControllerFactory(
 	options ...PomoControllerOption,
 ) *PomoController {
 	cf := PomoControllerFactory{
-		session:         session,
-		timer:           timer,
-		durationFactory: zeroDurationFactory,
+		Session:         session,
+		Timer:           timer,
+		DurationFactory: zeroDurationFactory,
 	}
 	return cf.Create(options...)
 }
@@ -136,9 +136,9 @@ func TestControllerPlayEvent(t *testing.T) {
 	session := sessionFactory()
 
 	cf := PomoControllerFactory{
-		session:         session,
-		timer:           timer,
-		durationFactory: zeroDurationCfg.GetDurationFactory(),
+		Session:         session,
+		Timer:           timer,
+		DurationFactory: zeroDurationCfg.GetDurationFactory(),
 	}
 	controller := cf.Create(PomoControllerOptionPlaySink(playSink))
 

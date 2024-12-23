@@ -7,7 +7,40 @@ import (
 	pomoTimer "pomogo/timer"
 )
 
+// CONSIDER INCLUDING ERRORS IN OPTIONS.
+
 type PomoControllerOption func(*PomoController) PomoControllerOption
+
+// =======
+// FACTORY
+// =======
+
+type PomoControllerFactory struct {
+	Session         pomoSession.PomoSessionIface
+	Timer           pomoTimer.PomoTimerIface
+	DurationFactory pomoSession.SessionStateDurationFactory
+}
+
+func (f *PomoControllerFactory) Create(
+	options ...PomoControllerOption,
+) *PomoController {
+
+	c := &PomoController{
+		session:         f.Session,
+		timer:           f.Timer,
+		durationFactory: f.DurationFactory,
+	}
+
+	for _, opt := range options {
+		opt(c)
+	}
+
+	return c
+}
+
+// =======
+// OPTIONS
+// =======
 
 func PomoControllerOptionErrorSink(errorSink func(err error)) PomoControllerOption {
 	return func(c *PomoController) PomoControllerOption {
@@ -55,27 +88,4 @@ func PomoControllerOptionNextStateSink(
 		c.nextStateEventSink = nextStateEventSink
 		return PomoControllerOptionNextStateSink(prev)
 	}
-}
-
-type PomoControllerFactory struct {
-	session         pomoSession.PomoSessionIface
-	timer           pomoTimer.PomoTimerIface
-	durationFactory pomoSession.SessionStateDurationFactory
-}
-
-func (f *PomoControllerFactory) Create(
-	options ...PomoControllerOption,
-) *PomoController {
-
-	c := &PomoController{
-		session:         f.session,
-		timer:           f.timer,
-		durationFactory: f.durationFactory,
-	}
-
-	for _, opt := range options {
-		opt(c)
-	}
-
-	return c
 }

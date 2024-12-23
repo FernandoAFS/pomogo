@@ -1,3 +1,5 @@
+// Interfaces and data structures used in for multiple implementations
+
 package controller
 
 import "time"
@@ -8,6 +10,12 @@ type PomoControllerIface interface {
 	Play(now time.Time) error
 	Skip(now time.Time) error
 	Stop(now time.Time) error
+}
+
+// Manages lifecycle of controller object.
+type PomoControllerContainerIface interface {
+	GetController() PomoControllerIface
+	RemoveController()
 }
 
 // ==========
