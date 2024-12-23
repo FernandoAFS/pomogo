@@ -30,13 +30,22 @@ func mockControllerFactory(
 	timer pomoTimer.PomoTimerIface,
 	session pomoSession.PomoSessionIface,
 	options ...PomoControllerOption,
-) *PomoController {
-	cf := PomoControllerFactory{
-		Session:         session,
-		Timer:           timer,
-		DurationFactory: zeroDurationFactory,
+) (*PomoController, error) {
+
+	fixedOptions := []PomoControllerOption{
+		PomoControllerSessionOpt(func() pomoSession.PomoSessionIface {
+			return session
+		}),
+		PomoControllerTimerOpt(func() pomoTimer.PomoTimerIface {
+			return timer
+		}),
+		PomoControllerDurationF(func() pomoSession.SessionStateDurationFactory {
+			return zeroDurationFactory
+		}),
 	}
-	return cf.Create(options...)
+	argOpts := append(fixedOptions, options...)
+
+	return ControllerFactory(argOpts...)
 }
 
 // ============
@@ -48,7 +57,11 @@ func TestControllerNextStatePause(t *testing.T) {
 	refNow := time.Date(2024, 12, 04, 0, 0, 0, 0, time.UTC)
 	timer := &pomoTimer.MockCbTimer{}
 	session := sessionFactory()
-	controller := mockControllerFactory(timer, session)
+	controller, err := mockControllerFactory(timer, session)
+
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	if st := controller.Status().State; st != PomoControllerStopped {
 		t.Fatalf("Controller state is %s instead of working", st)
@@ -135,12 +148,15 @@ func TestControllerPlayEvent(t *testing.T) {
 	timer := &pomoTimer.MockCbTimer{}
 	session := sessionFactory()
 
-	cf := PomoControllerFactory{
-		Session:         session,
-		Timer:           timer,
-		DurationFactory: zeroDurationCfg.GetDurationFactory(),
+	controller, err := mockControllerFactory(
+		timer,
+		session,
+		PomoControllerOptionPlaySink(playSink),
+	)
+
+	if err != nil {
+		t.Fatal(err)
 	}
-	controller := cf.Create(PomoControllerOptionPlaySink(playSink))
 
 	if st := controller.Status().State; st != PomoControllerStopped {
 		t.Fatalf("Controller state is %s instead of working", st)
@@ -191,11 +207,15 @@ func TestControllerStopEvent(t *testing.T) {
 	timer := &pomoTimer.MockCbTimer{}
 	session := sessionFactory()
 
-	controller := mockControllerFactory(
+	controller, err := mockControllerFactory(
 		timer,
 		session,
 		PomoControllerOptionStopSink(stopEventSink),
 	)
+
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	if st := controller.Status().State; st != PomoControllerStopped {
 		t.Fatalf("Controller state is %s instead of working", st)
@@ -272,12 +292,16 @@ func TestControllerPauseResumeEvent(t *testing.T) {
 	timer := &pomoTimer.MockCbTimer{}
 	session := sessionFactory()
 
-	controller := mockControllerFactory(
+	controller, err := mockControllerFactory(
 		timer,
 		session,
 		PomoControllerOptionPlaySink(playSink),
 		PomoControllerOptionPauseSink(pauseEventSink),
 	)
+
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	if st := controller.Status().State; st != PomoControllerStopped {
 		t.Fatalf("Controller state is %s instead of working", st)
@@ -371,12 +395,16 @@ func TestControllerNextStateEvent(t *testing.T) {
 		nextStateEventSinkCounter++
 	}
 
-	controller := mockControllerFactory(
+	controller, err := mockControllerFactory(
 		timer,
 		session,
 		PomoControllerOptionPlaySink(playSink),
 		PomoControllerOptionNextStateSink(nextStateEventSink),
 	)
+
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	if st := controller.Status().State; st != PomoControllerStopped {
 		t.Fatalf("Controller state is %s instead of working", st)
@@ -443,10 +471,14 @@ func TestControllerSkipEvent(t *testing.T) {
 	timer := &pomoTimer.MockCbTimer{}
 	session := sessionFactory()
 
-	controller := mockControllerFactory(
+	controller, err := mockControllerFactory(
 		timer,
 		session,
 	)
+
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	if err := controller.Play(eventTime); err != nil {
 		t.Fatal(err)
@@ -479,11 +511,15 @@ func TestControllerErrorEvent(t *testing.T) {
 		errorSinkPlayed = true
 	}
 
-	controller := mockControllerFactory(
+	controller, err := mockControllerFactory(
 		timer,
 		session,
 		PomoControllerOptionErrorSink(errorSink),
 	)
+
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	if err := controller.Play(eventTime); err != nil {
 		t.Fatal(err)

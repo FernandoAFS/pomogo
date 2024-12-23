@@ -25,7 +25,7 @@ var zeroDurationCfg = pomoSession.SessionStateDurationConfig{
 
 var zeroDurationFactory = zeroDurationCfg.GetDurationFactory()
 
-func sessionFactory() *pomoSession.PomoSession {
+func sessionFactory() pomoSession.PomoSessionIface {
 	nWorkSessions := 4
 	return &pomoSession.PomoSession{
 		WorkSessionsBreak: nWorkSessions,
@@ -33,16 +33,17 @@ func sessionFactory() *pomoSession.PomoSession {
 }
 
 func ssContainerFactory() *pomoController.SingleControllerContainer {
-
 	contFact := func() pomoController.PomoControllerIface {
-		timer := &pomoTimer.MockCbTimer{}
-		session := sessionFactory()
-		cf := pomoController.PomoControllerFactory{
-			Session:         session,
-			Timer:           timer,
-			DurationFactory: zeroDurationFactory,
-		}
-		return cf.Create()
+		ctrl, _ := pomoController.ControllerFactory(
+			pomoController.PomoControllerSessionOpt(sessionFactory),
+			pomoController.PomoControllerTimerOpt(func() pomoTimer.PomoTimerIface {
+				return new(pomoTimer.MockCbTimer)
+			}),
+			pomoController.PomoControllerDurationF(func() pomoSession.SessionStateDurationFactory {
+				return zeroDurationFactory
+			}),
+		)
+		return ctrl
 	}
 
 	return &pomoController.SingleControllerContainer{

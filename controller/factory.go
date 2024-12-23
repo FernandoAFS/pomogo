@@ -9,83 +9,118 @@ import (
 
 // CONSIDER INCLUDING ERRORS IN OPTIONS.
 
-type PomoControllerOption func(*PomoController) PomoControllerOption
+type PomoControllerOption func(*PomoController) (PomoControllerOption, error)
 
 // =======
 // FACTORY
 // =======
 
-type PomoControllerFactory struct {
-	Session         pomoSession.PomoSessionIface
-	Timer           pomoTimer.PomoTimerIface
-	DurationFactory pomoSession.SessionStateDurationFactory
-}
-
-func (f *PomoControllerFactory) Create(
+// Aggregator of Pomodoro Controller options and initializes pointer.
+func ControllerFactory(
 	options ...PomoControllerOption,
-) *PomoController {
-
-	c := &PomoController{
-		session:         f.Session,
-		timer:           f.Timer,
-		durationFactory: f.DurationFactory,
-	}
-
+) (*PomoController, error) {
+	c := new(PomoController)
 	for _, opt := range options {
-		opt(c)
-	}
+		_, err := opt(c)
+		if err != nil{
+			return nil, err
+		}
 
-	return c
+	}
+	return c, nil
 }
 
 // =======
 // OPTIONS
 // =======
 
-func PomoControllerOptionErrorSink(errorSink func(err error)) PomoControllerOption {
-	return func(c *PomoController) PomoControllerOption {
-		prev := c.errorSink
-		c.errorSink = errorSink
-		return PomoControllerOptionErrorSink(prev)
+// Sets controller session from factory
+func PomoControllerSessionOpt(sessionF func() pomoSession.PomoSessionIface) PomoControllerOption {
+	return func(c *PomoController) (PomoControllerOption, error) {
+		prev := c.session
+		c.session = sessionF()
+		return func(c *PomoController) (PomoControllerOption, error) {
+			c.session = prev
+			return PomoControllerSessionOpt(sessionF), nil
+		}, nil
 	}
 }
 
+// Sets controller timer from factory
+func PomoControllerTimerOpt(timerF func() pomoTimer.PomoTimerIface) PomoControllerOption {
+	return func(c *PomoController) (PomoControllerOption, error) {
+		prev := c.timer
+		c.timer = timerF()
+		return func(c *PomoController) (PomoControllerOption, error) {
+			c.timer = prev
+			return PomoControllerTimerOpt(timerF), nil
+		}, nil
+	}
+}
+
+// Sets controller duration factory from factory
+func PomoControllerDurationF(
+	durationF func() pomoSession.SessionStateDurationFactory,
+) PomoControllerOption {
+	return func(c *PomoController) (PomoControllerOption, error) {
+		prev := c.durationFactory
+		c.durationFactory = durationF()
+		return func(c *PomoController) (PomoControllerOption, error) {
+			c.durationFactory = prev
+			return PomoControllerDurationF(durationF), nil
+		}, nil
+	}
+}
+
+// Sets error sinks
+func PomoControllerOptionErrorSink(errorSink func(err error)) PomoControllerOption {
+	return func(c *PomoController) (PomoControllerOption, error) {
+		prev := c.errorSink
+		c.errorSink = errorSink
+		return PomoControllerOptionErrorSink(prev), nil
+	}
+}
+
+// Sets play sinks
 func PomoControllerOptionPlaySink(
 	playEventSink func(event PomoControllerEventArgsPlay),
 ) PomoControllerOption {
-	return func(c *PomoController) PomoControllerOption {
+	return func(c *PomoController) (PomoControllerOption, error) {
 		prev := c.playEventSink
 		c.playEventSink = playEventSink
-		return PomoControllerOptionPlaySink(prev)
+		return PomoControllerOptionPlaySink(prev), nil
 	}
 }
 
+// Sets stop sinks
 func PomoControllerOptionStopSink(
 	stopEventSink func(event PomoControllerEventArgsStop),
 ) PomoControllerOption {
-	return func(c *PomoController) PomoControllerOption {
+	return func(c *PomoController) (PomoControllerOption, error) {
 		prev := c.stopEventSink
 		c.stopEventSink = stopEventSink
-		return PomoControllerOptionStopSink(prev)
+		return PomoControllerOptionStopSink(prev), nil
 	}
 }
 
+// Sets pause sinks
 func PomoControllerOptionPauseSink(
 	pauseEventSink func(event PomoControllerEventArgsPause),
 ) PomoControllerOption {
-	return func(c *PomoController) PomoControllerOption {
+	return func(c *PomoController) (PomoControllerOption, error) {
 		prev := c.pauseEventSink
 		c.pauseEventSink = pauseEventSink
-		return PomoControllerOptionPauseSink(prev)
+		return PomoControllerOptionPauseSink(prev), nil
 	}
 }
 
+// Sets next state sinks
 func PomoControllerOptionNextStateSink(
 	nextStateEventSink func(event PomoControllerEventArgsNextState),
 ) PomoControllerOption {
-	return func(c *PomoController) PomoControllerOption {
+	return func(c *PomoController) (PomoControllerOption, error) {
 		prev := c.nextStateEventSink
 		c.nextStateEventSink = nextStateEventSink
-		return PomoControllerOptionNextStateSink(prev)
+		return PomoControllerOptionNextStateSink(prev), nil
 	}
 }
