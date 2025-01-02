@@ -17,7 +17,7 @@ func (t *PomoTimer) setup() error {
 	defer t.locker.Unlock()
 
 	if t.cancelChan != nil {
-		return TimerWaitedError
+		return ErrTimerWaited
 	}
 
 	t.cancelChan = make(chan struct{})
@@ -65,7 +65,7 @@ func (t *PomoTimer) Cancel() error {
 	defer t.locker.Unlock()
 
 	if t.cancelChan == nil {
-		return TimerNotWaited
+		return ErrTimerNotWaited
 	}
 
 	t.cancelChan <- struct{}{}

@@ -6,9 +6,6 @@ import (
 	"time"
 )
 
-// ANY TIME WILL DO...
-var refTime = time.Date(2024, 12, 04, 0, 0, 0, 0, time.UTC)
-
 // TEST IF THE CALLBACK IS RUN CORRECTLY WHEN IT SHOULD...
 func TestMockTimerSync(t *testing.T) {
 

@@ -2,6 +2,7 @@ package cli
 
 import (
 	"flag"
+	"fmt"
 	"os"
 	"pomogo/controller"
 	"pomogo/server"
@@ -72,5 +73,5 @@ func (cc *ClientConfig) Run() (*controller.PomoControllerStatus, error) {
 		return cl.Stop()
 	}
 
-	return nil, NewInvalidArgError(cc.action)
+	return nil, fmt.Errorf("invalid argument: %s" , cc.action)
 }

@@ -11,20 +11,16 @@ import (
 // DEFAULT CONTROLLER IMPLEMENTATION
 // =================================
 
+// Main business logic component.
+// Includes session for sequential state management, timer for background state change.
+// It also sends events.
+// pausedAt and end-of-state are for pause and status data.
 type PomoController struct {
 	session         pomoSession.PomoSessionIface
 	timer           pomoTimer.PomoTimerIface
 	durationFactory pomoSession.SessionStateDurationFactory
 
-	// SINKS ARE RUN SYNCHRONOUSLY. RUN ASYNC FUNCTIONS INSIDE THE CALLBACK IF
-	// NECESSARY.
-
-	// SINKS ARE CONSIDERED OPTIONAL. IF THEY ARE NOT INFORMED THEY WON'T RUN.
-
-	// THIS IS USEFUL SINCE THERE MAY BE BACKGROUND ERRORS
 	errorSink func(err error)
-
-	// RUN ON PLAY OR RESUME
 	playEventSink  func(event PomoControllerEventArgsPlay)
 	stopEventSink  func(event PomoControllerEventArgsStop)
 	pauseEventSink func(event PomoControllerEventArgsPause)
@@ -81,6 +77,7 @@ func (c *PomoController) Status() PomoControllerStatus {
 // EVENT EMITTING
 // --------------
 
+// Optional error event wrapper
 func (c *PomoController) errorEvent(err error) {
 	if c.errorSink == nil {
 		return
@@ -88,6 +85,7 @@ func (c *PomoController) errorEvent(err error) {
 	c.errorSink(err)
 }
 
+// Optional play event wrapper
 func (c *PomoController) playEvent(now time.Time) {
 	if c.playEventSink == nil {
 		return
@@ -106,6 +104,7 @@ func (c *PomoController) playEvent(now time.Time) {
 	c.playEventSink(playEvent)
 }
 
+// Optional play event wrapper
 func (c *PomoController) stopEvent(now time.Time) {
 	if c.stopEventSink == nil {
 		return
@@ -174,8 +173,8 @@ func (c *PomoController) Pause(now time.Time) error {
 	defer c.locker.Unlock()
 
 	if c.pauseAt != nil {
-		c.errorEvent(PausedTimer)
-		return PausedTimer
+		c.errorEvent(ErrPausedTimer)
+		return ErrPausedTimer
 	}
 	c.pauseAt = &now
 
@@ -206,8 +205,8 @@ func (c *PomoController) Play(now time.Time) error {
 		return c.resume(now)
 	}
 
-	c.errorEvent(RunningTimer)
-	return RunningTimer
+	c.errorEvent(ErrRunningTimer)
+	return ErrRunningTimer
 }
 
 func (c *PomoController) resume(now time.Time) error {
@@ -241,13 +240,13 @@ func (c *PomoController) nextTimer(now time.Time) error {
 	// IT'S BETTER TO STOP HERE.
 
 	if c.pauseAt != nil {
-		c.errorEvent(PausedTimer)
-		return PausedTimer
+		c.errorEvent(ErrPausedTimer)
+		return ErrPausedTimer
 	}
 
 	if c.endOfState == nil {
-		c.errorEvent(StoppedTimer)
-		return StoppedTimer
+		c.errorEvent(ErrStoppedTimer)
+		return ErrStoppedTimer
 	}
 
 	c.nextStateEvent(now)
@@ -280,8 +279,8 @@ func (c *PomoController) Skip(now time.Time) error {
 	// AWAY
 
 	if c.endOfState == nil {
-		c.errorEvent(StoppedTimer)
-		return StoppedTimer
+		c.errorEvent(ErrStoppedTimer)
+		return ErrStoppedTimer
 	}
 
 	if err := c.timer.Cancel(); err != nil {
@@ -302,8 +301,8 @@ func (c *PomoController) Stop(now time.Time) error {
 
 	// THIS MUST DISMISS EVERY RUNNING GOROUTINE.
 	if c.endOfState == nil {
-		c.errorEvent(StoppedTimer)
-		return StoppedTimer
+		c.errorEvent(ErrStoppedTimer)
+		return ErrStoppedTimer
 	}
 
 	if err := c.timer.Cancel(); err != nil {

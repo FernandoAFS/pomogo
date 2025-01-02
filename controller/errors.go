@@ -2,8 +2,8 @@ package controller
 
 import "errors"
 
-var StoppedTimer = errors.New("Cannot execute action on stopped timer")
-var PausedTimer = errors.New("Cannot execute action on paused timer")
-var RunningTimer = errors.New("Cannot execute action on running timer")
-var NoControllerError = errors.New("Must create a controller first")
-var ExistintgControllerError = errors.New("Must remove existing controller")
+var ErrStoppedTimer = errors.New("cannot execute action on stopped timer")
+var ErrPausedTimer = errors.New("cannot execute action on paused timer")
+var ErrRunningTimer = errors.New("cannot execute action on running timer")
+var ErrNoControllerError = errors.New("must create a controller first")
+var ErrExistintgControllerError = errors.New("must remove existing controller")

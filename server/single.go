@@ -27,7 +27,7 @@ func (c *SingleSessionServer) doNowCb(
 
 	ctrl := c.container.GetController()
 	if ctrl == nil {
-		return pomoController.NoControllerError
+		return pomoController.ErrNoControllerError
 	}
 
 	if err := cb(ctrl); err != nil {
@@ -42,7 +42,7 @@ func (c *SingleSessionServer) Status(
 ) error {
 	ctrl := c.container.GetController()
 	if ctrl == nil {
-		return pomoController.NoControllerError
+		return pomoController.ErrNoControllerError
 	}
 	*reply = ctrl.Status()
 	return nil

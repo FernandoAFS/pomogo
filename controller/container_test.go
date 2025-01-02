@@ -44,7 +44,7 @@ func TestControllerContainerEarlyRemove(t *testing.T) {
 	container := getTestContainer(&ctrl)
 
 	err := container.RemoveController()
-	if err != NoControllerError {
+	if err != ErrNoControllerError {
 		t.Fatal(err)
 	}
 }

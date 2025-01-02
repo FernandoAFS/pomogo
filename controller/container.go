@@ -1,5 +1,5 @@
-// THIS CONTAINS THE LOGIC OF A SINGLE SESSION MANAGER WRAPPED UNDER THE
-// CONTROLLER INTERFACE
+// This contains the logic of a single session manager wrapped under the
+// controller interface
 
 package controller
 
@@ -39,7 +39,7 @@ func (c *SingleControllerContainer) RemoveController() error {
 	defer c.mutex.Unlock()
 
 	if c.controller == nil {
-		return NoControllerError
+		return ErrNoControllerError
 	}
 
 	c.controller = nil

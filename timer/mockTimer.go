@@ -10,7 +10,7 @@ type MockCbTimer struct {
 func (t *MockCbTimer) WaitCb(d time.Duration, cb func()) error {
 
 	if t.cb != nil {
-		return TimerWaitedError
+		return ErrTimerWaited
 	}
 	t.cb = cb
 	return nil
@@ -18,7 +18,7 @@ func (t *MockCbTimer) WaitCb(d time.Duration, cb func()) error {
 
 func (t *MockCbTimer) Cancel() error {
 	if t.cb == nil {
-		return TimerNotWaited
+		return ErrTimerNotWaited
 	}
 	t.cb = nil
 	return nil
@@ -26,7 +26,7 @@ func (t *MockCbTimer) Cancel() error {
 
 func (t *MockCbTimer) ForceDone() error {
 	if t.cb == nil {
-		return TimerNotWaited
+		return ErrTimerNotWaited
 	}
 
 	// THIS IS NECESSARY TO POTENTIALLY RE-START THE TIMER FROM THIS VERY

@@ -2,6 +2,7 @@ package cli
 
 import (
 	"flag"
+	"fmt"
 	"net"
 	"net/http"
 	"net/rpc"
@@ -74,7 +75,7 @@ func ServerCmdArgParse(args ...string) (*ServerConfig, error) {
 	// TODO: MOVE VALIDATION TO ITS OWN METHOD.
 
 	if *listenProto != "unix" && *listenProto != "tcp" {
-		return nil, NewInvalidArgError(listenProto)
+		return nil, fmt.Errorf("invalid argument: %s", *listenProto)
 	}
 	// TODO: CROSS CHECK PROTOCOL AND ADDRESS.
 

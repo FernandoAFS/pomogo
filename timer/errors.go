@@ -2,5 +2,5 @@ package timer
 
 import "errors"
 
-var TimerWaitedError = errors.New("Timer aleready waited. Cannot wait twice.")
-var TimerNotWaited = errors.New("Timer not waited. Cannot cancel.")
+var ErrTimerWaited = errors.New("timer aleready waited, cannot wait twice")
+var ErrTimerNotWaited = errors.New("timer not waited, cannot cancel")
