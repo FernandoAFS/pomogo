@@ -9,7 +9,6 @@ type SessionStateDurationConfig struct {
 }
 
 func (cfg *SessionStateDurationConfig) GetDurationFactory() SessionStateDurationFactory {
-
 	return func(s PomoSessionStatus) time.Duration {
 		switch s {
 		case PomoSessionWork:

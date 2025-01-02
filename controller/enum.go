@@ -1,6 +1,10 @@
 package controller
 
-import "pomogo/session"
+import (
+	"encoding/json"
+	"fmt"
+	"pomogo/session"
+)
 
 // ===================
 // PomoControllerState
@@ -38,6 +42,49 @@ func SessionToControllerState(s session.PomoSessionStatus) PomoControllerState {
 	}
 
 	panic("Impossible PomoSessionStatus value")
+}
+
+func (s *PomoControllerState) UnmarshalJSON(b []byte) error {
+
+	fmt.Println("PomoControllerState unmarshal")
+	sr := string(b)
+	switch sr {
+	case "Work":
+		*s = PomoControllerWork
+	case "ShortBreak":
+		*s = PomoControllerShortBreak
+	case "LongBreak":
+		*s = PomoControllerLongBreak
+	case "Paused":
+		*s = PomoControllerPause
+	case "Stopped":
+		*s = PomoControllerStopped
+	default:
+		return &json.MarshalerError{}
+	}
+
+	return nil
+}
+
+func (s *PomoControllerState) MarshalJSON() ([]byte, error) {
+
+	fmt.Println("PomoControllerState marshal")
+	var sr string
+	switch *s {
+	case PomoControllerWork:
+		sr = `"Work"`
+	case PomoControllerShortBreak:
+		sr = `"ShortBreak"`
+	case PomoControllerLongBreak:
+		sr = `"LongBreak"`
+	case PomoControllerPause:
+		sr = `"Paused"`
+	case PomoControllerStopped:
+		sr = `"Stopped"`
+	default:
+		return nil, &json.MarshalerError{}
+	}
+	return []byte(sr), nil
 }
 
 const (

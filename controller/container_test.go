@@ -18,20 +18,14 @@ func getTestContainer(ctrl PomoControllerIface) SingleControllerContainer {
 // TESTS
 // =====
 
+// Standard case. Create, fetch and remove
 func TestControllerContainerUse(t *testing.T) {
-	// Standard case. Create, fetch and remove
 	ctrl := PomoController{}
 	container := getTestContainer(&ctrl)
 
-	if err := container.CreateController(); err != nil {
-		t.Fatal(err)
-	}
+	container.CreateController()
 
-	ctrlRes, err := container.GetController()
-
-	if err != nil {
-		t.Fatal(err)
-	}
+	ctrlRes := container.GetController()
 
 	if &ctrl != ctrlRes {
 		t.Fatalf("Controller reference mismatch")
@@ -43,18 +37,6 @@ func TestControllerContainerUse(t *testing.T) {
 
 }
 
-func TestControllerContainerEarlyGet(t *testing.T) {
-	// Check error on early return
-
-	ctrl := PomoController{}
-	container := getTestContainer(&ctrl)
-
-	_, err := container.GetController()
-	if err != NoControllerError {
-		t.Fatal(err)
-	}
-}
-
 func TestControllerContainerEarlyRemove(t *testing.T) {
 	// Check error on early remove
 
@@ -63,21 +45,6 @@ func TestControllerContainerEarlyRemove(t *testing.T) {
 
 	err := container.RemoveController()
 	if err != NoControllerError {
-		t.Fatal(err)
-	}
-}
-
-func TestControllerContainerDoubleCreate(t *testing.T) {
-	// Check error on create over existing container
-
-	ctrl := PomoController{}
-	container := getTestContainer(&ctrl)
-
-	if err := container.CreateController(); err != nil {
-		t.Fatal(err)
-	}
-
-	if err := container.CreateController(); err != ExistintgControllerError {
 		t.Fatal(err)
 	}
 }

@@ -1,6 +1,7 @@
 package server
 
 import (
+	"log/slog"
 	"net"
 	"net/http"
 	"net/rpc"
@@ -13,39 +14,37 @@ import (
 // ======
 
 // LIFECYCLE MANAGEMENT OF CONTROLLER.
+// It may be better to skip the container step and manage the lifecycle
+// directly from the server object.
 type SingleSessionServer struct {
 	container *pomoController.SingleControllerContainer
 }
 
-// 100% PRIVATE DRY METHOD
+// 100% private dry method
 func (c *SingleSessionServer) doNowCb(
-	cb func(now time.Time, ctrl pomoCtrl) error,
-) (*pomoController.PomoControllerStatus, error) {
+	cb func(ctrl pomoCtrl) error,
+) error {
 
-	ctrl, err := c.container.GetController()
-
-	if err != nil {
-		return nil, err
+	ctrl := c.container.GetController()
+	if ctrl == nil {
+		return pomoController.NoControllerError
 	}
 
-	if err := cb(time.Now(), ctrl); err != nil {
-		return nil, err
+	if err := cb(ctrl); err != nil {
+		return err
 	}
-
-	status := ctrl.Status()
-	return &status, nil
+	return nil
 }
 
 func (c *SingleSessionServer) Status(
 	request struct{},
 	reply *pomoController.PomoControllerStatus,
 ) error {
-	ctrl, err := c.container.GetController()
-	if err != nil {
-		return err
+	ctrl := c.container.GetController()
+	if ctrl == nil {
+		return pomoController.NoControllerError
 	}
-	status := ctrl.Status()
-	reply = &status
+	*reply = ctrl.Status()
 	return nil
 }
 
@@ -53,11 +52,15 @@ func (c *SingleSessionServer) Pause(
 	request struct{},
 	reply *pomoController.PomoControllerStatus,
 ) error {
-
-	reply, err := c.doNowCb(func(now time.Time, ctrl pomoCtrl) error {
-		return ctrl.Pause(now)
-	})
-	return err
+	now := time.Now()
+	return c.doNowCb(
+		func(ctrl pomoCtrl) error {
+			if err := ctrl.Pause(now); err != nil {
+				return err
+			}
+			*reply = ctrl.Status()
+			return nil
+		})
 }
 
 // CREATE NEW INSTANCE AND START CONTROLLER COUNTING.
@@ -65,37 +68,46 @@ func (c *SingleSessionServer) Play(
 	request struct{},
 	reply *pomoController.PomoControllerStatus,
 ) error {
-	if err := c.container.CreateController(); err != nil {
+	ctrl := c.container.CreateController()
+	now := time.Now()
+	if err := ctrl.Play(now); err != nil {
 		return err
 	}
-
-	reply, err := c.doNowCb(func(now time.Time, ctrl pomoCtrl) error {
-		return ctrl.Play(now)
-	})
-	return err
+	*reply = ctrl.Status()
+	return nil
 }
 
 func (c *SingleSessionServer) Skip(
 	request struct{},
 	reply *pomoController.PomoControllerStatus,
 ) error {
-	reply, err := c.doNowCb(func(now time.Time, ctrl pomoCtrl) error {
-		return ctrl.Skip(now)
-	})
-	return err
+	now := time.Now()
+	return c.doNowCb(
+		func(ctrl pomoCtrl) error {
+			if err := ctrl.Skip(now); err != nil {
+				return err
+			}
+			*reply = ctrl.Status()
+			return nil
+		})
 }
 
 func (c *SingleSessionServer) Stop(
 	request struct{},
 	reply *pomoController.PomoControllerStatus,
 ) error {
-	reply, err := c.doNowCb(func(now time.Time, ctrl pomoCtrl) error {
-		return ctrl.Stop(now)
-	})
-	return err
+	now := time.Now()
+	return c.doNowCb(
+		func(ctrl pomoCtrl) error {
+			if err := ctrl.Stop(now); err != nil {
+				return err
+			}
+			*reply = ctrl.Status()
+			return nil
+		})
 }
 
-// GIVEN A SERVER START LISTENING LISTENING SYNCHRONOUSLY
+// Given a server start listening listening synchronously
 func SingleSessionServerStart(protocol, address string, wrapper *SingleSessionServer) error {
 	// Name to be registered.
 	rpc.RegisterName(DefaultServerName, wrapper)
@@ -122,14 +134,18 @@ type SingleSessionClient struct {
 // Simply call a method given the string name and return the response as a
 // pomodoro status
 func (c *SingleSessionClient) callMethod(method string) (*pomoStatus, error) {
-	var resp *pomoStatus
+	var resp pomoStatus
 	callName := DefaultServerName + "." + method
+
+	slog.Debug("Making request", "method", callName, "response", resp)
 
 	if err := c.client.Call(callName, struct{}{}, &resp); err != nil {
 		return nil, err
 	}
 
-	return resp, nil
+	slog.Debug("Successfull response", "status", resp)
+
+	return &resp, nil
 }
 
 func (c *SingleSessionClient) Status() (*pomoStatus, error) {

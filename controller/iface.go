@@ -18,13 +18,13 @@ type PomoControllerContainerIface interface {
 	RemoveController()
 }
 
-// ==========
-// STATUS MSG
-// ==========
+// ======
+// STATUS
+// ======
 
 type PomoControllerStatus struct {
 	State          PomoControllerState
-	TimeLeft       *time.Duration
+	TimeLeft       *StatusDuration
 	PausedAt       *time.Time
 	WorkedSessions int
 }
@@ -59,4 +59,27 @@ type PomoControllerEventArgsNextState struct {
 	CurrentState PomoControllerState
 	NextState    PomoControllerState
 	TimeLeft     time.Duration
+}
+
+// ===========
+// STATUS TIME
+// ===========
+
+type StatusDuration time.Duration
+
+func (d *StatusDuration) UnmarshalJSON(b []byte) error {
+
+	strB := string(b)
+
+	in_, err := time.ParseDuration(strB[1 : len(strB)-1])
+	if err != nil {
+		return err
+	}
+	*d = StatusDuration(in_)
+	return nil
+}
+
+func (s *StatusDuration) MarshalJSON() ([]byte, error) {
+	td := time.Duration(*s).String()
+	return []byte(`"` + td + `"`), nil
 }

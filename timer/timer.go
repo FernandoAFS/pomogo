@@ -8,7 +8,7 @@ import (
 // TIMER WITH LOCK PROTECTION
 type PomoTimer struct {
 	cancelChan chan struct{}
-	locker     sync.Locker
+	locker     sync.Mutex
 }
 
 // THREAD SAFE WAY TO CREATE A NEW CANCEL CHANEL.
@@ -24,27 +24,30 @@ func (t *PomoTimer) setup() error {
 	return nil
 }
 
-// THREAD SAFE WAY TO REMOVE CANCEL CHANEL.
-func (t *PomoTimer) teardown() bool {
-	t.locker.Lock()
-	defer t.locker.Unlock()
+func (t *PomoTimer) cbWaitRoutine(d time.Duration, cb func()) {
 
-	if t.cancelChan == nil {
-		return false
+	teardown := func() bool {
+		t.locker.Lock()
+		defer t.locker.Unlock()
+		if t.cancelChan == nil {
+			return false
+		}
+		close(t.cancelChan)
+		t.cancelChan = nil
+		return true
 	}
 
-	// GRACEFUL DELETION
-	close(t.cancelChan)
-	return true
-}
-
-func (t *PomoTimer) cbWaitRoutine(d time.Duration, cb func()) {
 	select {
 	case <-time.After(d):
-		t.teardown()
-		cb() // ASYNC EXECUTION OF THE CALLBACK AND INMEDIATE TEARDOWN.
+		// If chan was terminated between timer event and lock capture skip
+		if !teardown() {
+			return
+		}
+		cb()
+		return
 	case <-t.cancelChan:
-		t.teardown()
+		// PROBABLY LOG THIS.
+		return
 	}
 }
 
@@ -57,7 +60,7 @@ func (t *PomoTimer) WaitCb(d time.Duration, cb func()) error {
 	return nil
 }
 
-func (t *PomoTimer) Cancel(d time.Duration) error {
+func (t *PomoTimer) Cancel() error {
 	t.locker.Lock()
 	defer t.locker.Unlock()
 
@@ -66,6 +69,7 @@ func (t *PomoTimer) Cancel(d time.Duration) error {
 	}
 
 	t.cancelChan <- struct{}{}
+	close(t.cancelChan)
 	t.cancelChan = nil
 	return nil
 }

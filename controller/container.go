@@ -15,28 +15,22 @@ type SingleControllerContainer struct {
 }
 
 // Create new controlle instance. Return error if one already exists
-func (c *SingleControllerContainer) CreateController() error {
+func (c *SingleControllerContainer) CreateController() PomoControllerIface {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
-	if c.controller != nil {
-		return ExistintgControllerError
+	if c.controller == nil {
+		c.controller = c.ControllerFactory()
 	}
 
-	c.controller = c.ControllerFactory()
-	return nil
+	return c.controller
 }
 
 // Return existing controller. Return error if none exist
-func (c *SingleControllerContainer) GetController() (PomoControllerIface, error) {
+func (c *SingleControllerContainer) GetController() PomoControllerIface {
 	c.mutex.RLock()
 	defer c.mutex.RUnlock()
-
-	if c.controller == nil {
-		return nil, NoControllerError
-	}
-
-	return c.controller, nil
+	return c.controller
 }
 
 // Remove reference to instance. Return error if none exist.

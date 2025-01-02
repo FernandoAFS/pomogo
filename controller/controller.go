@@ -42,7 +42,7 @@ type PomoController struct {
 // GETTER METHOD
 // -------------
 
-// RETURN A STATUS REPORT OF THE CONTROLLER
+// Return a status report of the controller
 func (c *PomoController) Status() PomoControllerStatus {
 	c.locker.Lock()
 	defer c.locker.Unlock()
@@ -68,7 +68,7 @@ func (c *PomoController) Status() PomoControllerStatus {
 	}
 
 	now := time.Now()
-	timeLeft := c.endOfState.Sub(now)
+	timeLeft := StatusDuration(c.endOfState.Sub(now))
 	return PomoControllerStatus{
 		State:          SessionToControllerState(c.session.Status()),
 		TimeLeft:       &timeLeft,
@@ -193,7 +193,8 @@ func (c *PomoController) Play(now time.Time) error {
 
 	if c.endOfState == nil {
 		c.session.Reset()
-		if err := c.runTimer(now); err != nil {
+		status := c.session.Status()
+		if err := c.runTimer(now, status); err != nil {
 			c.errorEvent(err)
 			return err
 		}
@@ -216,8 +217,7 @@ func (c *PomoController) resume(now time.Time) error {
 
 	cb := func() {
 		nextStatus := c.session.GetNextStatus()
-		c.session.SetNextStatus(nextStatus)
-		c.runTimer(then)
+		c.runTimer(then, nextStatus)
 	}
 
 	if err := c.timer.WaitCb(stateTimeLeft, cb); err != nil {
@@ -252,13 +252,11 @@ func (c *PomoController) nextTimer(now time.Time) error {
 
 	c.nextStateEvent(now)
 	nextStatus := c.session.GetNextStatus()
-	c.session.SetNextStatus(nextStatus)
-	return c.runTimer(now)
+	return c.runTimer(now, nextStatus)
 }
 
 // TODO: RENAME THIS FUNCTION...
-func (c *PomoController) runTimer(now time.Time) error {
-	status := c.session.Status()
+func (c *PomoController) runTimer(now time.Time, status pomoSession.PomoSessionStatus) error {
 	statusDuration := c.durationFactory(status)
 	then := now.Add(statusDuration)
 
@@ -268,6 +266,7 @@ func (c *PomoController) runTimer(now time.Time) error {
 		return err
 	}
 
+	c.session.SetNextStatus(status)
 	eos := now.Add(statusDuration)
 	c.endOfState = &eos
 	return nil
@@ -290,10 +289,11 @@ func (c *PomoController) Skip(now time.Time) error {
 		return err
 	}
 
-	c.nextStateEvent(now)
 	nextStatus := c.session.GetNextStatus()
-	c.session.SetNextStatus(nextStatus)
-	return c.runTimer(now)
+	c.nextStateEvent(now)
+	// This is broken. if error rises it changes the state and keeps the
+	// existing work order...
+	return c.runTimer(now, nextStatus)
 }
 
 func (c *PomoController) Stop(now time.Time) error {
