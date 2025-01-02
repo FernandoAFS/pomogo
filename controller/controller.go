@@ -168,6 +168,7 @@ func (c *PomoController) nextStateEvent(now time.Time) {
 // CONTROLLER ACTIONS
 // ------------------
 
+// Freeze timer in time
 func (c *PomoController) Pause(now time.Time) error {
 	c.locker.Lock()
 	defer c.locker.Unlock()
@@ -186,6 +187,7 @@ func (c *PomoController) Pause(now time.Time) error {
 	return nil
 }
 
+// Start paused timer or resume paused timer
 func (c *PomoController) Play(now time.Time) error {
 	c.locker.Lock()
 	defer c.locker.Unlock()
@@ -209,6 +211,7 @@ func (c *PomoController) Play(now time.Time) error {
 	return ErrRunningTimer
 }
 
+// Run on a paused timer
 func (c *PomoController) resume(now time.Time) error {
 
 	stateTimeLeft := c.endOfState.Sub(*c.pauseAt)
@@ -216,7 +219,9 @@ func (c *PomoController) resume(now time.Time) error {
 
 	cb := func() {
 		nextStatus := c.session.GetNextStatus()
-		c.runTimer(then, nextStatus)
+		if err := c.runTimer(then, nextStatus); err != nil{
+			c.errorEvent(err)
+		}
 	}
 
 	if err := c.timer.WaitCb(stateTimeLeft, cb); err != nil {
@@ -231,6 +236,7 @@ func (c *PomoController) resume(now time.Time) error {
 	return nil
 }
 
+// call at the end of state timer event
 func (c *PomoController) nextTimer(now time.Time) error {
 	// RECURSIVE CALLING THE TIMER MUST BE DONE IN A THREAD SAFE WAY.
 	c.locker.Lock()
@@ -249,17 +255,28 @@ func (c *PomoController) nextTimer(now time.Time) error {
 		return ErrStoppedTimer
 	}
 
-	c.nextStateEvent(now)
 	nextStatus := c.session.GetNextStatus()
-	return c.runTimer(now, nextStatus)
+	if err := c.runTimer(now, nextStatus); err != nil{
+		return err
+	}
+
+	// Fire only next status event if the next state is coming.
+	c.nextStateEvent(now)
+	return nil
 }
 
-// TODO: RENAME THIS FUNCTION...
+
+// start waiting for next timer event.
 func (c *PomoController) runTimer(now time.Time, status pomoSession.PomoSessionStatus) error {
 	statusDuration := c.durationFactory(status)
 	then := now.Add(statusDuration)
 
-	cb := func() { c.nextTimer(then) }
+	cb := func() { 
+		if err := c.nextTimer(then); err != nil{
+			c.errorEvent(err)
+		}
+	}
+
 	if err := c.timer.WaitCb(statusDuration, cb); err != nil {
 		c.errorEvent(err)
 		return err
@@ -271,12 +288,13 @@ func (c *PomoController) runTimer(now time.Time, status pomoSession.PomoSessionS
 	return nil
 }
 
+// Jump to the next status inmediately
 func (c *PomoController) Skip(now time.Time) error {
 	c.locker.Lock()
 	defer c.locker.Unlock()
 
-	// IT'S OK TO SKIP A PAUSED TIMER BUT IT WILL START THE NEXT TIMER RIGHT
-	// AWAY
+	// It's ok to skip a paused timer but it will start the next timer right
+	// away
 
 	if c.endOfState == nil {
 		c.errorEvent(ErrStoppedTimer)
@@ -295,6 +313,7 @@ func (c *PomoController) Skip(now time.Time) error {
 	return c.runTimer(now, nextStatus)
 }
 
+// Reset controller to initial status
 func (c *PomoController) Stop(now time.Time) error {
 	c.locker.Lock()
 	defer c.locker.Unlock()

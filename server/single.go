@@ -110,15 +110,16 @@ func (c *SingleSessionServer) Stop(
 // Given a server start listening listening synchronously
 func SingleSessionServerStart(protocol, address string, wrapper *SingleSessionServer) error {
 	// Name to be registered.
-	rpc.RegisterName(DefaultServerName, wrapper)
+	if err := rpc.RegisterName(DefaultServerName, wrapper); err != nil{
+		return err
+	}
 	rpc.HandleHTTP()
 	l, err := net.Listen(protocol, address)
 	if err != nil {
 		return err
 	}
 	// COMMUNICATE WITH TEST CASE.
-	http.Serve(l, nil)
-	return nil
+	return http.Serve(l, nil)
 }
 
 // ======

@@ -23,8 +23,14 @@ func TestMockTimerSync(t *testing.T) {
 	cb := func() {
 		wg.Done()
 	}
-	mockTimer.WaitCb(d, cb)
 
-	mockTimer.ForceDone()
+	if err := mockTimer.WaitCb(d, cb); err != nil{
+		t.Fatal(err)
+	}
+
+	if err := mockTimer.ForceDone(); err != nil{
+		t.Fatal(err)
+	}
+
 	wg.Wait()
 }

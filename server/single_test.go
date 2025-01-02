@@ -61,7 +61,22 @@ func TestSSStartstop(t *testing.T) {
 	SOCKET := "/tmp/pomo_test.sock"
 
 	onListen := func(l net.Listener, s *rpc.Server) error {
-		go http.Serve(l, s)
+		errCh := make(chan error)
+		go func(){
+			if err := http.Serve(l, s); err != nil{
+				errCh <- err
+			}
+		}()
+		
+		// VERY MUCH BRUTE FORCE...
+		select{
+			case err, ok := <- errCh:
+				if !ok{
+					t.Fatal("Closed error ch")
+				}
+				t.Fatal(err)
+			case <-time.After(time.Second):
+		}
 
 		ssC, err := SingleSessionClientFactory(
 			SingleClientRpcHttpConnect("unix", SOCKET),
