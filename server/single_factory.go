@@ -70,7 +70,7 @@ func SingleServerRpcRegisterOpt(
 ) SServerFuncOpt {
 	return func(ss *SingleSessionServer) (SServerFuncOpt, error) {
 		server := serverFactory()
-		if err := server.RegisterName(DefaultServerName, ss); err != nil{
+		if err := server.RegisterName(DefaultServerName, ss); err != nil {
 			return nil, err
 		}
 		l, err := net.Listen(protocol, address)

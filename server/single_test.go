@@ -62,20 +62,20 @@ func TestSSStartstop(t *testing.T) {
 
 	onListen := func(l net.Listener, s *rpc.Server) error {
 		errCh := make(chan error)
-		go func(){
-			if err := http.Serve(l, s); err != nil{
+		go func() {
+			if err := http.Serve(l, s); err != nil {
 				errCh <- err
 			}
 		}()
-		
+
 		// VERY MUCH BRUTE FORCE...
-		select{
-			case err, ok := <- errCh:
-				if !ok{
-					t.Fatal("Closed error ch")
-				}
-				t.Fatal(err)
-			case <-time.After(time.Second):
+		select {
+		case err, ok := <-errCh:
+			if !ok {
+				t.Fatal("Closed error ch")
+			}
+			t.Fatal(err)
+		case <-time.After(time.Second):
 		}
 
 		ssC, err := SingleSessionClientFactory(

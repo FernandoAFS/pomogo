@@ -2,7 +2,6 @@ package controller
 
 import (
 	"encoding/json"
-	"fmt"
 	"pomogo/session"
 )
 
@@ -46,7 +45,6 @@ func SessionToControllerState(s session.PomoSessionStatus) PomoControllerState {
 
 func (s *PomoControllerState) UnmarshalJSON(b []byte) error {
 
-	fmt.Println("PomoControllerState unmarshal")
 	sr := string(b)
 	switch sr {
 	case "Work":
@@ -68,7 +66,6 @@ func (s *PomoControllerState) UnmarshalJSON(b []byte) error {
 
 func (s *PomoControllerState) MarshalJSON() ([]byte, error) {
 
-	fmt.Println("PomoControllerState marshal")
 	var sr string
 	switch *s {
 	case PomoControllerWork:

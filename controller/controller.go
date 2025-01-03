@@ -20,7 +20,7 @@ type PomoController struct {
 	timer           pomoTimer.PomoTimerIface
 	durationFactory pomoSession.SessionStateDurationFactory
 
-	errorSink func(err error)
+	errorSink      func(err error)
 	playEventSink  func(event PomoControllerEventArgsPlay)
 	stopEventSink  func(event PomoControllerEventArgsStop)
 	pauseEventSink func(event PomoControllerEventArgsPause)
@@ -219,7 +219,7 @@ func (c *PomoController) resume(now time.Time) error {
 
 	cb := func() {
 		nextStatus := c.session.GetNextStatus()
-		if err := c.runTimer(then, nextStatus); err != nil{
+		if err := c.runTimer(then, nextStatus); err != nil {
 			c.errorEvent(err)
 		}
 	}
@@ -256,7 +256,7 @@ func (c *PomoController) nextTimer(now time.Time) error {
 	}
 
 	nextStatus := c.session.GetNextStatus()
-	if err := c.runTimer(now, nextStatus); err != nil{
+	if err := c.runTimer(now, nextStatus); err != nil {
 		return err
 	}
 
@@ -265,14 +265,13 @@ func (c *PomoController) nextTimer(now time.Time) error {
 	return nil
 }
 
-
 // start waiting for next timer event.
 func (c *PomoController) runTimer(now time.Time, status pomoSession.PomoSessionStatus) error {
 	statusDuration := c.durationFactory(status)
 	then := now.Add(statusDuration)
 
-	cb := func() { 
-		if err := c.nextTimer(then); err != nil{
+	cb := func() {
+		if err := c.nextTimer(then); err != nil {
 			c.errorEvent(err)
 		}
 	}

@@ -118,7 +118,7 @@ func TestControllerNextStatePause(t *testing.T) {
 			)
 		}
 
-		if err := timer.ForceDone(); err != nil{
+		if err := timer.ForceDone(); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -423,7 +423,7 @@ func TestControllerNextStateEvent(t *testing.T) {
 	N_ITERATIONS := 50
 
 	for i := 0; i < N_ITERATIONS; i++ {
-		if err := timer.ForceDone(); err != nil{
+		if err := timer.ForceDone(); err != nil {
 			t.Fatal(err)
 		}
 

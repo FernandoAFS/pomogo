@@ -15,6 +15,12 @@ coverage:
     [ -f c.out ] || >&2 echo "Must run test first"
     [ -f c.out ] && go tool cover -func=c.out
 
+lint:
+    golangci-lint run ./...
+
+fmt:
+    go fmt ./...
+
 clean:
     rm -f c.out
     go clean

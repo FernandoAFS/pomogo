@@ -110,7 +110,7 @@ func (c *SingleSessionServer) Stop(
 // Given a server start listening listening synchronously
 func SingleSessionServerStart(protocol, address string, wrapper *SingleSessionServer) error {
 	// Name to be registered.
-	if err := rpc.RegisterName(DefaultServerName, wrapper); err != nil{
+	if err := rpc.RegisterName(DefaultServerName, wrapper); err != nil {
 		return err
 	}
 	rpc.HandleHTTP()

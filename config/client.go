@@ -73,5 +73,5 @@ func (cc *ClientConfig) Run() (*controller.PomoControllerStatus, error) {
 		return cl.Stop()
 	}
 
-	return nil, fmt.Errorf("invalid argument: %s" , cc.action)
+	return nil, fmt.Errorf("invalid argument: %s", cc.action)
 }
