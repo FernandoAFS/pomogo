@@ -1,11 +1,11 @@
 package server
 
 import (
+	pomoController "github.com/FernandoAFS/pomogo/controller"
 	"log/slog"
 	"net"
 	"net/http"
 	"net/rpc"
-	pomoController "pomogo/controller"
 	"time"
 )
 

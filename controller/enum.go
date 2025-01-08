@@ -2,7 +2,7 @@ package controller
 
 import (
 	"encoding/json"
-	"pomogo/session"
+	"github.com/FernandoAFS/pomogo/session"
 )
 
 // ===================

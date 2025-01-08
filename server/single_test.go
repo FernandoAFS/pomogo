@@ -2,13 +2,13 @@ package server
 
 import (
 	"errors"
+	pomoController "github.com/FernandoAFS/pomogo/controller"
+	pomoSession "github.com/FernandoAFS/pomogo/session"
+	pomoTimer "github.com/FernandoAFS/pomogo/timer"
 	"net"
 	"net/http"
 	"net/rpc"
 	"os"
-	pomoController "pomogo/controller"
-	pomoSession "pomogo/session"
-	pomoTimer "pomogo/timer"
 	"testing"
 	"time"
 )

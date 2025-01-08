@@ -3,17 +3,17 @@ package config
 import (
 	"flag"
 	"fmt"
+	"github.com/FernandoAFS/pomogo/controller"
+	"github.com/FernandoAFS/pomogo/server"
+	"github.com/FernandoAFS/pomogo/session"
+	"github.com/FernandoAFS/pomogo/timer"
 	"net"
 	"net/http"
 	"net/rpc"
 	"os"
-	"pomogo/controller"
-	"pomogo/server"
-	"pomogo/session"
-	"pomogo/timer"
-	"time"
 	"os/signal"
 	"syscall"
+	"time"
 )
 
 type ServerConfig struct {
@@ -144,14 +144,14 @@ func (sc *ServerConfig) runServerCtx() server.SServerFuncOpt {
 			rpc.NewServer,
 			func(l net.Listener, s *rpc.Server) error {
 
-				exit := make(chan os.Signal, 1) 
+				exit := make(chan os.Signal, 1)
 				signal.Notify(exit, os.Interrupt, syscall.SIGTERM)
 
 				// TODO: build a more elegant solution...
-				go func(){
+				go func() {
 					<-exit
 					err := l.Close()
-					if err != nil{
+					if err != nil {
 						fmt.Println(err)
 					}
 				}()
@@ -188,7 +188,6 @@ func (sc *ServerConfig) HttpListen() error {
 	if err != nil {
 		return err
 	}
-
 
 	return nil
 }

@@ -4,8 +4,8 @@ package server
 // and token to each request
 
 import (
+	pomoController "github.com/FernandoAFS/pomogo/controller"
 	"log/slog"
-	pomoController "pomogo/controller"
 )
 
 type SessionWrapper struct {

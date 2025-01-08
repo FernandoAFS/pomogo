@@ -1,7 +1,7 @@
 package server
 
 import (
-	pomoController "pomogo/controller"
+	pomoController "github.com/FernandoAFS/pomogo/controller"
 )
 
 type pomoStatus = pomoController.PomoControllerStatus

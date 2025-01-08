@@ -1,10 +1,10 @@
 package server
 
 import (
+	pomoController "github.com/FernandoAFS/pomogo/controller"
 	"net"
 	"net/rpc"
 	"os"
-	pomoController "pomogo/controller"
 )
 
 const (

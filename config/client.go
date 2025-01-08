@@ -3,9 +3,9 @@ package config
 import (
 	"flag"
 	"fmt"
+	"github.com/FernandoAFS/pomogo/controller"
+	"github.com/FernandoAFS/pomogo/server"
 	"os"
-	"pomogo/controller"
-	"pomogo/server"
 	"strings"
 )
 

@@ -4,8 +4,8 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
+	"github.com/FernandoAFS/pomogo/config"
 	"os"
-	"pomogo/config"
 )
 
 //go:generate sh -c "printf %s $(git rev-parse HEAD) > commit.txt"
@@ -16,7 +16,7 @@ var Commit string
 //go:embed version.txt
 var Version string
 
-var helpMessage =  "No command. Use `server`, `client` or `version`."
+var helpMessage = "No command. Use `server`, `client` or `version`."
 
 func onErr(err error) {
 	if err == nil {

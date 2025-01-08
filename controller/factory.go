@@ -3,8 +3,8 @@
 package controller
 
 import (
-	pomoSession "pomogo/session"
-	pomoTimer "pomogo/timer"
+	pomoSession "github.com/FernandoAFS/pomogo/session"
+	pomoTimer "github.com/FernandoAFS/pomogo/timer"
 )
 
 // CONSIDER INCLUDING ERRORS IN OPTIONS.
