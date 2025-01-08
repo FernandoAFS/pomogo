@@ -1,7 +1,6 @@
 package server
 
 import (
-	"errors"
 	"net"
 	"net/rpc"
 	"os"
@@ -98,16 +97,11 @@ func SingleServerRpcUnixRegOpt(
 	reg := SingleServerRpcRegisterOpt("unix", address, serverFactory, onListen)
 	return func(ss *SingleSessionServer) (SServerFuncOpt, error) {
 
-		// RAISE ERROR IF THE SOCKET ALREADY EXISTS. PROBABLY BAD EXIT...
-		if _, err := os.Stat(address); !errors.Is(err, os.ErrNotExist) {
-			// CONSIDER RETURNING A CUSTOM ERROR...
-			return nil, os.ErrExist
-		}
-
 		unreg, err := reg(ss)
 		if err != nil {
 			return nil, err
 		}
+
 		return func(ss *SingleSessionServer) (SServerFuncOpt, error) {
 			if err := os.Remove(address); err != nil {
 				return nil, err

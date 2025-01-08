@@ -12,6 +12,8 @@ import (
 	"pomogo/session"
 	"pomogo/timer"
 	"time"
+	"os/signal"
+	"syscall"
 )
 
 type ServerConfig struct {
@@ -45,7 +47,7 @@ func ServerCmdArgParse(args ...string) (*ServerConfig, error) {
 
 	listenAddress := fs.String(
 		"address",
-		homeDir+"/pomogo.socket",
+		homeDir+"/.pomogo.socket",
 		"Address for communications. Use unix for file or tcp for tcp/ip",
 	)
 
@@ -141,6 +143,19 @@ func (sc *ServerConfig) runServerCtx() server.SServerFuncOpt {
 			sc.listenAddress,
 			rpc.NewServer,
 			func(l net.Listener, s *rpc.Server) error {
+
+				exit := make(chan os.Signal, 1) 
+				signal.Notify(exit, os.Interrupt, syscall.SIGTERM)
+
+				// TODO: build a more elegant solution...
+				go func(){
+					<-exit
+					err := l.Close()
+					if err != nil{
+						fmt.Println(err)
+					}
+				}()
+
 				return http.Serve(l, s)
 			},
 		)
@@ -173,5 +188,7 @@ func (sc *ServerConfig) HttpListen() error {
 	if err != nil {
 		return err
 	}
+
+
 	return nil
 }

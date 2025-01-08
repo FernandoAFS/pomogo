@@ -1,8 +1,12 @@
 
 APP := "pomogo"
 
+
+generate:
+    @go generate ./cmd/pomogo...
+
 build:
-    @go build -o ./{{APP}} ./cmd...
+    @go build -o ./{{APP}} ./cmd/pomogo...
 
 test:
     @go test -coverprofile=c.out ./... -json
