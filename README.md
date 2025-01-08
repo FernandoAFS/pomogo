@@ -18,7 +18,13 @@ This project is currently under active development. If you want a more feature-r
 
 ## Install
 
+Pomogo itself:
+
 `go install github.com/FernandoAFS/pomogo/cmd/pomogo@latest`
+
+Pomomenu script (for dmenu integration). Requires pomogo, dmenu and jq:
+
+`go install github.com/FernandoAFS/pomogo/cmd/pomomenu@latest`
 
 ## Usage
 
@@ -28,9 +34,11 @@ Optionally use `setsid pomogo server` to run server in background.
 
 Run clients with `pomogo client --help` or `pomogo server --help` for more details.
 
+Try `pomomenu` for dmenu usage
+
 ## WIP features
 
 - Shell event hooks.
 - Including session semantics. This is important for integration.
-- Include recepies for integration with other tools: [dmenu](https://tools.suckless.org/dmenu/), [taskwarrior](https://taskwarrior.org/), [timewarrior](https://timewarrior.net/)...
+- Include recepies for integration with other tools: ~~[dmenu](https://tools.suckless.org/dmenu/)~~, [taskwarrior](https://taskwarrior.org/), [timewarrior](https://timewarrior.net/)...
 
