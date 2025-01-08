@@ -29,3 +29,5 @@ clean:
     rm -f c.out
     go clean
 
+
+pre-commit: generate fmt

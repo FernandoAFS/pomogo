@@ -30,7 +30,7 @@ func ClientCmdArgParse(args ...string) (*ClientConfig, error) {
 		"Protocol for communications. Use unix for file or tcp for tcp/ip.",
 	)
 
-	listenAddressDef := homeDir + "/pomogo.socket"
+	listenAddressDef := homeDir + "/.pomogo.socket"
 	connectAddress := fs.String(
 		"address",
 		listenAddressDef,
