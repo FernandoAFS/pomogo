@@ -80,6 +80,7 @@ func (d *StatusDuration) UnmarshalJSON(b []byte) error {
 }
 
 func (s *StatusDuration) MarshalJSON() ([]byte, error) {
-	td := time.Duration(*s).String()
-	return []byte(`"` + td + `"`), nil
+	td := time.Duration(*s)
+	tdr := td.Round(time.Second)
+	return []byte(`"` + tdr.String() + `"`), nil
 }
