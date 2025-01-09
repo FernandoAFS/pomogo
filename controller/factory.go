@@ -116,11 +116,41 @@ func PomoControllerOptionPauseSink(
 
 // Sets next state sinks
 func PomoControllerOptionNextStateSink(
-	nextStateEventSink func(event PomoControllerEventArgsNextState),
+	endOfStateEventSink func(event PomoControllerEventArgsNextState),
 ) PomoControllerOption {
 	return func(c *PomoController) (PomoControllerOption, error) {
-		prev := c.nextStateEventSink
-		c.nextStateEventSink = nextStateEventSink
+		prev := c.endOfStateEventSink
+		c.endOfStateEventSink = endOfStateEventSink
 		return PomoControllerOptionNextStateSink(prev), nil
+	}
+}
+
+// Create an event listener that runs command on every event
+func PomoControllerHook(command string) PomoControllerOption {
+	// Check that the command is reacheble and executable
+
+	return func(c *PomoController) (PomoControllerOption, error) {
+
+		prevPlay := c.playEventSink
+		prevStop := c.stopEventSink
+		prevPause := c.pauseEventSink
+		prevNe := c.endOfStateEventSink
+		prevErr := c.errorSink
+
+		c.playEventSink = PlayExecHook(command)
+		c.stopEventSink = StopExecHook(command)
+		c.pauseEventSink = PauseExecHook(command)
+		c.endOfStateEventSink = NextStateExecHook(command)
+		c.errorSink = ErrorExecHook(command)
+
+		return func(c *PomoController) (PomoControllerOption, error) {
+			c.playEventSink = prevPlay
+			c.stopEventSink = prevStop
+			c.pauseEventSink = prevPause
+			c.endOfStateEventSink = prevNe
+			c.errorSink = prevErr
+
+			return PomoControllerHook(command), nil
+		}, nil
 	}
 }

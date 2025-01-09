@@ -3,10 +3,6 @@ package config
 import (
 	"flag"
 	"fmt"
-	"github.com/FernandoAFS/pomogo/controller"
-	"github.com/FernandoAFS/pomogo/server"
-	"github.com/FernandoAFS/pomogo/session"
-	"github.com/FernandoAFS/pomogo/timer"
 	"net"
 	"net/http"
 	"net/rpc"
@@ -14,6 +10,11 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/FernandoAFS/pomogo/controller"
+	"github.com/FernandoAFS/pomogo/server"
+	"github.com/FernandoAFS/pomogo/session"
+	"github.com/FernandoAFS/pomogo/timer"
 )
 
 type ServerConfig struct {
@@ -23,6 +24,7 @@ type ServerConfig struct {
 	workDuration       time.Duration
 	shortBreakDuration time.Duration
 	longBreakDuration  time.Duration
+	command            string
 }
 
 func ServerCmdArgParse(args ...string) (*ServerConfig, error) {
@@ -69,6 +71,12 @@ func ServerCmdArgParse(args ...string) (*ServerConfig, error) {
 		"Duration of long break.",
 	)
 
+	command := fs.String(
+		"event_command",
+		"",
+		"Command to be runned on every controller event (but error)",
+	)
+
 	if err := fs.Parse(args); err != nil {
 		return nil, err
 	}
@@ -88,6 +96,7 @@ func ServerCmdArgParse(args ...string) (*ServerConfig, error) {
 		workDuration:       *workDuration,
 		shortBreakDuration: *shortBreakDuration,
 		longBreakDuration:  *longBreakDuration,
+		command:            *command,
 	}, nil
 }
 
@@ -110,10 +119,19 @@ func (sc *ServerConfig) durationFactory() session.SessionStateDurationFactory {
 }
 
 func (sc *ServerConfig) controllerFactory() (controller.PomoControllerIface, error) {
-	return controller.ControllerFactory(
+
+	options := []controller.PomoControllerOption{
 		controller.PomoControllerSessionOpt(sc.sessionFactory),
 		controller.PomoControllerTimerOpt(sc.timerFactory),
 		controller.PomoControllerDurationF(sc.durationFactory),
+	}
+
+	if sc.command != "" {
+		options = append(options, controller.PomoControllerHook(sc.command))
+	}
+
+	return controller.ControllerFactory(
+		options...,
 	)
 }
 

@@ -15,7 +15,6 @@ func (s *PomoSession) CompletedWorkSessions() int {
 }
 
 func (s *PomoSession) GetNextStatus() PomoSessionStatus {
-	// EITHER LONG OR SHORT BREAK
 	if s.status != PomoSessionWork {
 		return PomoSessionWork
 	}

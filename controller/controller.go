@@ -26,7 +26,7 @@ type PomoController struct {
 	pauseEventSink func(event PomoControllerEventArgsPause)
 
 	// RUN ON END OF STATE TIME OR ON SKIP STATES
-	nextStateEventSink func(event PomoControllerEventArgsNextState)
+	endOfStateEventSink func(event PomoControllerEventArgsNextState)
 
 	pauseAt    *time.Time
 	endOfState *time.Time
@@ -145,8 +145,8 @@ func (c *PomoController) pauseEvent(now time.Time) {
 	c.pauseEventSink(pauseEvent)
 }
 
-func (c *PomoController) nextStateEvent(now time.Time) {
-	if c.nextStateEventSink == nil {
+func (c *PomoController) endOfStateEvent(now time.Time) {
+	if c.endOfStateEventSink == nil {
 		return
 	}
 
@@ -161,7 +161,7 @@ func (c *PomoController) nextStateEvent(now time.Time) {
 		TimeLeft:     timeLeft,
 	}
 
-	c.nextStateEventSink(nextStateEvent)
+	c.endOfStateEventSink(nextStateEvent)
 }
 
 // ------------------
@@ -261,7 +261,7 @@ func (c *PomoController) nextTimer(now time.Time) error {
 	}
 
 	// Fire only next status event if the next state is coming.
-	c.nextStateEvent(now)
+	c.endOfStateEvent(now)
 	return nil
 }
 
@@ -273,6 +273,7 @@ func (c *PomoController) runTimer(now time.Time, status pomoSession.PomoSessionS
 	cb := func() {
 		if err := c.nextTimer(then); err != nil {
 			c.errorEvent(err)
+			// CONTROL THIS EVENT CHANGE...
 		}
 	}
 
@@ -306,7 +307,7 @@ func (c *PomoController) Skip(now time.Time) error {
 	}
 
 	nextStatus := c.session.GetNextStatus()
-	c.nextStateEvent(now)
+	c.endOfStateEvent(now)
 	// This is broken. if error rises it changes the state and keeps the
 	// existing work order...
 	return c.runTimer(now, nextStatus)
