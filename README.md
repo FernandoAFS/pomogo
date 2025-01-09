@@ -7,18 +7,38 @@
    <a href="https://github.com/FernandoAFS/pomogo/blob/main/LICENSE"><img alt="GitHub License" src="https://img.shields.io/github/license/FernandoAFS/pomogo"></a>
 </p>
 
-
 <h1 align="center">Pomogo. Minimal, unix-like pomodoro timer</h1>
 
-Simple minimal, unix-like and hackable pomodoro timer. Loosely inspired by [suckless](https://suckless.org/philosophy/).
+Simple minimal, unix-like and hackable [pomodoro](https://en.wikipedia.org/wiki/Pomodoro_Technique) timer. Loosely inspired by [suckless](https://suckless.org/philosophy/).
 
-## Disclaimer
+## ⚠ Disclaimer:
 
-This project is currently under active development. If you want a more feature-ready experience consider other tools like [spt](https://github.com/pickfire/spt) or [focus](https://github.com/ayoisaiah/focus/tree/master)
+This project is currently under active development. If you want a more feature-ready experience consider other tools like [spt](https://github.com/pickfire/spt) or [focus](https://github.com/ayoisaiah/focus/tree/master).
 
-## Install
+## 🚀 How it works:
 
-Pomogo itself:
+- Start a server.
+- Start a pomodoro session.
+- Work for 25 minutes
+- Break for 5 minutes
+- Take a long 15 minutes break after 4 work sessions
+- Work again...
+
+## 🌠 Features:
+
+- 0 dependencies. 100% go with no packages. Comipled go package ready to work on any unix-like system.
+- Server-client architecture via unix sockets by default.
+- Customizable. Every parameter is passed via flags.
+- Run scripts on server event for unlimited customizability.
+- Out of the box integration with [dmenu](https://tools.suckless.org/dmenu/) via `pomomenu`.
+
+## ❓Motivation:
+
+Create a simple pomodoro timer that is easy to integrate with other tools with unix scripts.
+
+I had a very hard time creating scripts round [spt](https://github.com/pickfire/spt) to integrate it with taskwarrior (and timewarrior).
+
+## 🚚 Install:
 
 `go install github.com/FernandoAFS/pomogo/cmd/pomogo@latest`
 
@@ -26,19 +46,42 @@ Pomomenu script (for dmenu integration). Requires pomogo, dmenu and jq:
 
 `go install github.com/FernandoAFS/pomogo/cmd/pomomenu@latest`
 
-## Usage
+## ⌨  Usage:
 
-Start a server with: `pomogo server`
-
-Optionally use `setsid pomogo server` to run server in background.
+Start a server with: `pomogo server` (`setsid pomogo server` to start background server)
 
 Run clients with `pomogo client --help` or `pomogo server --help` for more details.
 
-Try `pomomenu` for dmenu usage
+Try `pomomenu` for dmenu usage.
 
-## WIP features
+### 🪝Hooks:
 
-- Shell event hooks.
-- Including session semantics. This is important for integration.
-- Include recepies for integration with other tools: ~~[dmenu](https://tools.suckless.org/dmenu/)~~, [taskwarrior](https://taskwarrior.org/), [timewarrior](https://timewarrior.net/)...
+It's possible to run a script on server events. To do set the script on server startup: `pomogo server --event_command <path to your script>`. This script may be any executable.
 
+The following environment variables will be informed on this script:
+
+- **POMO_EVENT**: EndOfState, Error, Play, Pause or Stop values.
+- **POMO_STATUS**: Error message if Error event. Work, ShortBreak or Long Break otherwise.
+- **POMO_AT**: Iso date of the moment the event was triggered.
+
+An example is included in `scripts/hook.sh` that notifies through `notify-send`.
+
+## 📅 Working plan:
+
+Main project milestones.
+
+### V1.0
+
+- ~~Event hooks~~
+- ~~dmenu script~~
+- Include log
+- Reasonable functional testing.
+
+## V1.1
+
+- Simplify code, specially on factory patterns and containers.
+- Improve testing. Aim for complete coverage and simulation testing to anticipate bugs
+- Include semantic sessions to allow for better integration.
+- Improve pomomenu. Make it easy to probe for existing server.
+- Improve on hooks functionality. Incude more details.
+- Include release in Arch-AUR and NPM.
