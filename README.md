@@ -32,7 +32,7 @@ This project is currently under active development. If you want a more feature-r
 - Run scripts on server event for unlimited customizability.
 - Out of the box integration with [dmenu](https://tools.suckless.org/dmenu/) via `pomomenu`.
 
-## ❓Motivation:
+## ❓ Motivation:
 
 Create a simple pomodoro timer that is easy to integrate with other tools with unix scripts.
 
@@ -46,7 +46,7 @@ Pomomenu script (for dmenu integration). Requires pomogo, dmenu and jq:
 
 `go install github.com/FernandoAFS/pomogo/cmd/pomomenu@latest`
 
-## ⌨  Usage:
+## ⌨ Usage:
 
 Start a server with: `pomogo server` (`setsid pomogo server` to start background server)
 
@@ -54,7 +54,7 @@ Run clients with `pomogo client --help` or `pomogo server --help` for more detai
 
 Try `pomomenu` for dmenu usage.
 
-### 🪝Hooks:
+### 🪝 Hooks:
 
 It's possible to run a script on server events. To do set the script on server startup: `pomogo server --event_command <path to your script>`. This script may be any executable.
 
@@ -68,19 +68,19 @@ An example is included in `scripts/hook.sh` that notifies through `notify-send`.
 
 ## 📅 Working plan:
 
-Main project milestones.
+Main project milestones. This is subject to change.
 
 ### V1.0
 
-- ~~Event hooks~~
-- ~~dmenu script~~
-- Include log
+- ~~Event hooks.~~
+- ~~dmenu script.~~
+- Include logo.
 - Reasonable functional testing.
 
 ## V1.1
 
 - Simplify code, specially on factory patterns and containers.
-- Improve testing. Aim for complete coverage and simulation testing to anticipate bugs
+- Improve testing. Aim for complete coverage and simulation testing to anticipate bugs.
 - Include semantic sessions to allow for better integration.
 - Improve pomomenu. Make it easy to probe for existing server.
 - Improve on hooks functionality. Incude more details.
